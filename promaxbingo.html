@@ -1,0 +1,2511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BINGO MAKER PRO - Premium Real-Time Interactive Bingo Suite</title>
+    <!-- Tailwind CSS for rich interface styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        premium: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                            active: '#2563eb',
+                            gold: '#d97706',
+                            emerald: '#059669'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Inter Font & Lucide Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- QRCode Generator CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+            overflow-x: hidden;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        /* Glassmorphism Styles */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        .glass-dark {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(51, 65, 85, 0.5);
+        }
+        /* Bingo grid animations */
+        @keyframes pulse-gold {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.7); }
+            50% { transform: scale(1.03); box-shadow: 0 0 12px 4px rgba(217, 119, 6, 0.4); }
+        }
+        .pulse-marked {
+            animation: pulse-gold 2s infinite ease-in-out;
+        }
+        /* Grid styling */
+        .bingo-grid {
+            display: grid;
+            aspect-ratio: 1 / 1;
+            width: 100%;
+        }
+        /* Print layout previews */
+        .print-page {
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+            background: white;
+            position: relative;
+        }
+        /* Premium button hover transformations */
+        .btn-hover-transform {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-hover-transform:hover {
+            transform: translateY(-1px);
+        }
+        .btn-hover-transform:active {
+            transform: translateY(1px);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+
+    <!-- Premium Header (Only shown if NOT in isolated Player View mode) -->
+    <header id="main-header" class="sticky top-0 z-40 w-full glass-panel border-b border-slate-200 px-6 py-3 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <div class="p-2 bg-slate-900 text-white rounded-lg shadow-md flex items-center justify-center">
+                <i data-lucide="grid" class="w-6 h-6 text-yellow-400"></i>
+            </div>
+            <div>
+                <div class="flex items-center space-x-2">
+                    <span class="font-extrabold text-xl tracking-tight text-slate-900">BINGO MAKER</span>
+                    <span class="px-2 py-0.5 bg-yellow-400 text-slate-950 font-bold text-xs uppercase tracking-widest rounded-full">PRO</span>
+                </div>
+                <p class="text-xs text-slate-500 font-medium">Enterprise Real-Time Event Suite</p>
+            </div>
+        </div>
+
+        <!-- Mode Selectors -->
+        <div class="flex bg-slate-100 p-1 rounded-xl space-x-1 border border-slate-200">
+            <button id="nav-designer-btn" onclick="switchMainTab('designer')" class="px-4 py-2 text-xs font-semibold rounded-lg flex items-center space-x-2 transition-all bg-white text-slate-900 shadow-sm">
+                <i data-lucide="palette" class="w-4 h-4 text-blue-500"></i>
+                <span>Card Designer</span>
+            </button>
+            <button id="nav-host-btn" onclick="switchMainTab('host')" class="px-4 py-2 text-xs font-semibold rounded-lg flex items-center space-x-2 transition-all text-slate-600 hover:text-slate-900">
+                <i data-lucide="tv" class="w-4 h-4 text-emerald-500"></i>
+                <span>Broadcast Host</span>
+            </button>
+            <button id="nav-player-btn" onclick="switchMainTab('player')" class="px-4 py-2 text-xs font-semibold rounded-lg flex items-center space-x-2 transition-all text-slate-600 hover:text-slate-900">
+                <i data-lucide="users" class="w-4 h-4 text-purple-500"></i>
+                <span>Player Sync Hub</span>
+            </button>
+        </div>
+
+        <!-- Connection Badge / Quick Action -->
+        <div class="flex items-center space-x-3">
+            <div id="connection-badge" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span id="connection-status-text">Local Engine Active</span>
+            </div>
+            
+            <button onclick="toggleInfoModal()" class="p-2 text-slate-500 hover:text-slate-800 rounded-lg bg-slate-50 border border-slate-200">
+                <i data-lucide="help-circle" class="w-4 h-4"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Dynamic Content Container -->
+    <main class="flex-1 w-full max-w-8xl mx-auto flex flex-col md:flex-row relative">
+
+        <!-- ==================== TAB 1: BINGO CARD DESIGNER & CUSTOMIZER ==================== -->
+        <section id="tab-designer" class="w-full flex flex-col lg:flex-row gap-6 p-4 md:p-6">
+            
+            <!-- Designer Controls Sidepanel -->
+            <div class="w-full lg:w-[400px] flex flex-col gap-5 shrink-0">
+                
+                <!-- Project Management -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xs font-extrabold uppercase tracking-widest text-slate-400">Card Setup & Workspace</h3>
+                        <div class="flex space-x-1">
+                            <button onclick="triggerUndo()" title="Undo action" class="p-1.5 text-slate-600 hover:bg-slate-100 rounded-md transition"><i data-lucide="undo" class="w-4 h-4"></i></button>
+                            <button onclick="triggerRedo()" title="Redo action" class="p-1.5 text-slate-600 hover:bg-slate-100 rounded-md transition"><i data-lucide="redo" class="w-4 h-4"></i></button>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Project Name</label>
+                            <input type="text" id="project-name" oninput="updateProjectTitle(this.value)" value="Interactive Classic Bingo" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Grid Size</label>
+                                <select id="grid-size" onchange="changeGridSize(parseInt(this.value))" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm font-semibold focus:outline-none bg-white">
+                                    <option value="3">3 x 3 (9 Slots)</option>
+                                    <option value="4">4 x 4 (16 Slots)</option>
+                                    <option value="5" selected>5 x 5 (Standard)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Center Cell</label>
+                                <select id="center-cell-mode" onchange="setCenterCellMode(this.value)" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm font-semibold focus:outline-none bg-white">
+                                    <option value="free" selected>FREE Space</option>
+                                    <option value="normal">Normal Grid</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="pt-2 flex gap-2">
+                            <button onclick="saveProjectToWorkspace()" class="flex-1 px-3 py-2 bg-slate-900 text-white rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 btn-hover-transform hover:bg-slate-800">
+                                <i data-lucide="save" class="w-3.5 h-3.5"></i>
+                                <span>Save Project</span>
+                            </button>
+                            <button onclick="loadProjectsList()" class="px-3 py-2 bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold flex items-center justify-center space-x-1 hover:bg-slate-200">
+                                <i data-lucide="folder-open" class="w-3.5 h-3.5"></i>
+                                <span>Load</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content & Generation -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <h3 class="text-xs font-extrabold uppercase tracking-widest text-slate-400 mb-3">Content & Distribution</h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <span class="block text-xs font-bold text-slate-700 mb-1.5">Generator Type</span>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="setGeneratorType('numbers')" id="gen-type-numbers" class="px-3 py-2 rounded-lg text-xs font-bold border border-blue-500 bg-blue-50 text-blue-600 flex items-center justify-center space-x-1">
+                                    <i data-lucide="hash" class="w-3.5 h-3.5"></i>
+                                    <span>Classic (1-75)</span>
+                                </button>
+                                <button onclick="setGeneratorType('custom')" id="gen-type-custom" class="px-3 py-2 rounded-lg text-xs font-bold border border-slate-200 text-slate-600 hover:bg-slate-50 flex items-center justify-center space-x-1">
+                                    <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                                    <span>Custom Vocabulary</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Custom vocabulary options -->
+                        <div id="vocab-settings-box" class="hidden space-y-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Words / Symbols (one per line)</label>
+                                <textarea id="custom-vocab-input" rows="5" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Enter custom items..."></textarea>
+                                <span class="text-[10px] text-slate-400">Provide at least 25 items for a standard 5x5 card.</span>
+                            </div>
+                            
+                            <!-- Image Batch Upload for Grid Distribution -->
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Batch Image Grids (Optional)</label>
+                                <div class="flex items-center justify-center w-full">
+                                    <label class="flex flex-col items-center justify-center w-full h-16 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100">
+                                        <div class="flex flex-col items-center justify-center pt-2 pb-2">
+                                            <i data-lucide="image-plus" class="w-5 h-5 text-slate-400"></i>
+                                            <p class="text-[10px] text-slate-500 mt-1 font-semibold">Upload Batch PNG / JPEG</p>
+                                        </div>
+                                        <input type="file" id="batch-images-upload" multiple accept="image/*" class="hidden" onchange="handleBatchImagesUpload(this.files)">
+                                    </label>
+                                </div>
+                                <div id="batch-image-preview-count" class="text-[10px] text-slate-500 mt-1 font-medium hidden"></div>
+                            </div>
+                        </div>
+
+                        <!-- Card Multiplier -->
+                        <div class="border-t border-slate-100 pt-3">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <label class="text-xs font-bold text-slate-700">Cards to Generate</label>
+                                <input type="number" id="batch-card-count" min="1" max="100" value="5" class="w-16 px-2 py-1 text-center border border-slate-200 rounded-lg text-xs font-bold">
+                            </div>
+                            <p class="text-[10px] text-slate-400 mb-3">Creates unique random distribution arrangements for every sheet.</p>
+                            
+                            <button onclick="generateBingoCards()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs flex items-center justify-center space-x-2 btn-hover-transform shadow-md shadow-blue-200">
+                                <i data-lucide="sparkles" class="w-4 h-4 text-yellow-300"></i>
+                                <span>Generate Unique Batches</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Custom Styling Panels -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="text-xs font-extrabold uppercase tracking-widest text-slate-400">Card Design & Customization</h3>
+                    
+                    <!-- Header Customizer -->
+                    <div class="space-y-2">
+                        <span class="block text-xs font-bold text-slate-700">Grid Heading Style</span>
+                        <div class="grid grid-cols-3 gap-1">
+                            <button onclick="setHeaderStyle('classic')" class="px-2 py-1.5 bg-slate-900 text-white rounded-md text-[10px] font-bold">B-I-N-G-O</button>
+                            <button onclick="setHeaderStyle('custom')" class="px-2 py-1.5 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-md text-[10px] font-bold">Custom</button>
+                            <button onclick="setHeaderStyle('none')" class="px-2 py-1.5 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-md text-[10px] font-bold">No Header</button>
+                        </div>
+                        <input type="text" id="header-custom-text" oninput="updateHeaderCustomText(this.value)" value="BINGO" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs font-bold hidden" placeholder="Custom heading words">
+                    </div>
+
+                    <!-- Colors & Layout styling -->
+                    <div class="space-y-3 pt-2 border-t border-slate-100">
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">Theme Color</label>
+                                <input type="color" id="theme-color" oninput="applyCardStyling()" value="#1e293b" class="w-full h-8 rounded-lg cursor-pointer border border-slate-200 bg-white">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">Line Color</label>
+                                <input type="color" id="gridline-color" oninput="applyCardStyling()" value="#cbd5e1" class="w-full h-8 rounded-lg cursor-pointer border border-slate-200 bg-white">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[10px] font-extrabold text-slate-500 mb-1">Line Thickness</label>
+                                <input type="range" id="gridline-thickness" min="1" max="6" value="2" oninput="applyCardStyling()" class="w-full accent-slate-700">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-extrabold text-slate-500 mb-1">Font Scale</label>
+                                <input type="range" id="font-scale" min="12" max="32" value="20" oninput="applyCardStyling()" class="w-full accent-slate-700">
+                            </div>
+                        </div>
+
+                        <div>
+                            <span class="block text-xs font-bold text-slate-700 mb-1">Font Styling</span>
+                            <select id="card-font-family" onchange="applyCardStyling()" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none bg-white">
+                                <option value="sans-serif">Modern Sans-Serif</option>
+                                <option value="Georgia, serif">Georgia Editorial Serif</option>
+                                <option value="Courier New, monospace">Retro Courier Monospace</option>
+                                <option value="Impact, Charcoal, sans-serif">Bold Impact style</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Watermark System -->
+                    <div class="space-y-2 pt-2 border-t border-slate-100">
+                        <span class="block text-xs font-bold text-slate-700">Card Watermark overlay</span>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <span class="text-xs text-slate-500">Enable Watermark</span>
+                            <input type="checkbox" id="watermark-enabled" onchange="applyCardStyling()" class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500">
+                        </div>
+                        <input type="text" id="watermark-text" oninput="applyCardStyling()" value="EVENT EXCLUSIVE" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs font-semibold" placeholder="Watermark text">
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[10px] text-slate-500">Opacity</label>
+                                <input type="range" id="watermark-opacity" min="0" max="1" step="0.1" value="0.1" oninput="applyCardStyling()" class="w-full accent-slate-700">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-slate-500">Rotation</label>
+                                <input type="range" id="watermark-rotation" min="-90" max="90" value="-30" oninput="applyCardStyling()" class="w-full accent-slate-700">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Safe margin guides & Creator branding -->
+                    <div class="pt-2 border-t border-slate-100 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-bold text-slate-700">Include Cut Guides</label>
+                            <input type="checkbox" id="cut-guides-enabled" onchange="applyCardStyling()" checked class="w-4 h-4 text-blue-600">
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-bold text-slate-700">Creator Branding Footer</label>
+                            <input type="checkbox" id="branding-footer" onchange="applyCardStyling()" checked class="w-4 h-4 text-blue-600">
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Card Interactive Preview, Editing, and Print Settings Area -->
+            <div class="flex-1 flex flex-col gap-5">
+                
+                <!-- Main Preview Workspace Bar -->
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="p-1.5 bg-slate-100 rounded-lg">
+                            <i data-lucide="eye" class="w-4 h-4 text-slate-600"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-sm font-bold text-slate-800">Print Engine & Multi-Card Preview</h2>
+                            <p class="text-xs text-slate-400">Cards are locked securely in sheet layouts. Click or double-click elements to edit.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-3">
+                        <div>
+                            <select id="print-layout-mode" onchange="changePrintLayout(this.value)" class="px-3 py-1.5 border border-slate-200 rounded-lg text-xs font-bold focus:outline-none bg-white">
+                                <option value="1">1 Card / Sheet (Standard Portrait)</option>
+                                <option value="2">2 Cards / Sheet</option>
+                                <option value="4">4 Cards / Sheet (Mini grids)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="flex items-center space-x-1 bg-slate-100 p-1 rounded-lg">
+                            <button onclick="cycleSelectedPreviewPage(-1)" class="p-1 hover:bg-white rounded text-slate-600"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                            <span id="preview-page-indicator" class="text-xs font-extrabold px-2 text-slate-700">Sheet 1 / 1</span>
+                            <button onclick="cycleSelectedPreviewPage(1)" class="p-1 hover:bg-white rounded text-slate-600"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Virtual Canvas Page Sheet (Simulating real print margins/crop marks) -->
+                <div class="flex-1 flex items-center justify-center p-2 bg-slate-100 rounded-3xl border border-slate-200 relative min-h-[500px]">
+                    <div id="print-sheet-container" class="print-page w-[360px] sm:w-[480px] lg:w-[580px] aspect-[1/1.414] p-6 flex flex-col justify-between transition-all duration-300">
+                        <!-- Header / Title printed if layout allows -->
+                        <div id="print-sheet-header" class="text-center mb-2">
+                            <h1 id="preview-sheet-project-name" class="text-sm font-bold tracking-tight text-slate-800">Interactive Classic Bingo</h1>
+                            <p class="text-[9px] text-slate-400 font-medium">BINGO MAKER PRO Enterprise Edition</p>
+                        </div>
+
+                        <!-- Card grid cells container rendering inside page boundaries -->
+                        <div id="print-cards-grid-wrapper" class="flex-1 grid gap-4 items-center justify-center">
+                            <!-- Dynamically loaded custom canvas or grid layout based on selection -->
+                        </div>
+
+                        <!-- Production Cutting and Branding footer markup -->
+                        <div id="print-sheet-footer" class="mt-2 flex items-center justify-between text-[8px] text-slate-400 font-mono">
+                            <span></span>
+                            <span id="creator-branding-tag">Created by BINGO MAKER PRO by Cedventures in Taiwan</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Export Suite Panel -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <h3 class="text-xs font-extrabold uppercase tracking-widest text-slate-400 mb-4">Export High-Fidelity Asset Suite</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <button onclick="exportBingoSheets('png')" class="p-4 rounded-xl border border-slate-200 hover:border-slate-400 hover:bg-slate-50 text-left transition flex items-start space-x-3 btn-hover-transform">
+                            <div class="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                                <i data-lucide="image" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <span class="block font-bold text-xs text-slate-800">Export High-Res PNG</span>
+                                <span class="text-[10px] text-slate-400">High fidelity, transparent backdrops supported</span>
+                            </div>
+                        </button>
+
+                        <button onclick="exportBingoSheets('jpeg')" class="p-4 rounded-xl border border-slate-200 hover:border-slate-400 hover:bg-slate-50 text-left transition flex items-start space-x-3 btn-hover-transform">
+                            <div class="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
+                                <i data-lucide="download" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <span class="block font-bold text-xs text-slate-800">Export ZIP Package (JPEGs)</span>
+                                <span class="text-[10px] text-slate-400">Batch zipped for large classrooms or printing</span>
+                            </div>
+                        </button>
+
+                        <button onclick="exportBingoSheets('print')" class="p-4 rounded-xl border border-slate-200 hover:border-slate-400 hover:bg-slate-50 text-left transition flex items-start space-x-3 btn-hover-transform">
+                            <div class="p-2 bg-yellow-50 text-yellow-600 rounded-lg">
+                                <i data-lucide="printer" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <span class="block font-bold text-xs text-slate-800">Direct Browser Print</span>
+                                <span class="text-[10px] text-slate-400">Perfect alignment to default A4/Letter size</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- ==================== TAB 2: BROADCAST HOST DASHBOARD ==================== -->
+        <section id="tab-host" class="w-full hidden flex-col lg:flex-row gap-6 p-4 md:p-6">
+            
+            <!-- Host Setup & Controllers -->
+            <div class="w-full lg:w-[350px] flex flex-col gap-5 shrink-0">
+                
+                <!-- Live Event QR Join Code System -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
+                    <h3 class="text-xs font-extrabold uppercase tracking-widest text-slate-400 mb-3 text-left">Real-Time Event Invitation</h3>
+                    
+                    <div class="flex justify-center mb-3">
+                        <div id="qrcode-canvas" class="p-3 bg-white border border-slate-200 rounded-xl shadow-inner inline-block"></div>
+                    </div>
+                    
+                    <span class="inline-block px-3 py-1 bg-slate-100 rounded-full font-mono text-xs font-extrabold text-slate-700 tracking-wide mb-2" id="host-room-id-tag">ROOM: --</span>
+                    
+                    <div class="space-y-2">
+                        <input type="text" id="join-url-input" readonly value="" class="w-full text-[10px] font-mono text-center px-2 py-1.5 bg-slate-50 rounded border border-slate-200 text-slate-500">
+                        <button onclick="copyJoinUrl()" class="w-full py-1.5 border border-slate-200 text-xs font-bold rounded-lg hover:bg-slate-50 flex items-center justify-center space-x-1">
+                            <i data-lucide="copy" class="w-3 h-3"></i>
+                            <span>Copy Secure Link</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Winning Pattern Manager -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-extrabold uppercase tracking-widest text-slate-400">Winning Pattern Target</h3>
+                        <span class="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-[10px] font-bold rounded-full">Interactive Click</span>
+                    </div>
+                    
+                    <!-- Redesigned High-End Interactive OLED Pattern Builder -->
+                    <div class="p-4 bg-slate-950 rounded-3xl border border-slate-800 shadow-2xl relative overflow-hidden flex flex-col justify-between">
+                        <!-- Futuristic Background Accents -->
+                        <div class="absolute -right-12 -top-12 w-24 h-24 bg-yellow-500/10 rounded-full blur-xl pointer-events-none"></div>
+                        <div class="absolute -left-12 -bottom-12 w-24 h-24 bg-blue-500/10 rounded-full blur-xl pointer-events-none"></div>
+                        
+                        <!-- High-End LCD Color-Themed B-I-N-G-O Scoreboard Header -->
+                        <div class="grid grid-cols-5 gap-1.5 mb-3 text-center text-xs font-black tracking-widest relative z-10 select-none">
+                            <span class="py-1 rounded bg-blue-950/60 border border-blue-500/30 text-blue-400 text-[11px] shadow-sm shadow-blue-500/10">B</span>
+                            <span class="py-1 rounded bg-red-950/60 border border-red-500/30 text-red-400 text-[11px] shadow-sm shadow-red-500/10">I</span>
+                            <span class="py-1 rounded bg-slate-800 border border-slate-600 text-slate-200 text-[11px] shadow-sm">N</span>
+                            <span class="py-1 rounded bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 text-[11px] shadow-sm shadow-emerald-500/10">G</span>
+                            <span class="py-1 rounded bg-amber-950/60 border border-amber-500/30 text-amber-400 text-[11px] shadow-sm shadow-amber-500/10">O</span>
+                        </div>
+                        <div class="grid grid-cols-5 gap-1.5 aspect-square w-full relative z-10" id="pattern-editor-preview">
+                            <!-- Clickable grid elements showing/editing selected visual pattern -->
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="flex gap-2">
+                            <div class="flex-1">
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Preset Configurations</label>
+                                <select id="preset-pattern-selector" onchange="applyPresetPattern(this.value)" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs font-bold focus:outline-none bg-white">
+                                    <option value="horizontal">Horizontal Row</option>
+                                    <option value="vertical">Vertical Row</option>
+                                    <option value="diagonal">Diagonal Cross X</option>
+                                    <option value="corners">Four Corners</option>
+                                    <option value="plus">Plus Sign (+)</option>
+                                    <option value="blackout" selected>Blackout (Full Card)</option>
+                                </select>
+                            </div>
+                            <div class="flex items-end">
+                                <button onclick="hostGenerateRandomPattern()" class="px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-lg text-xs font-bold flex items-center space-x-1 btn-hover-transform h-[38px] shadow-sm shadow-blue-100">
+                                    <i data-lucide="dices" class="w-4 h-4"></i>
+                                    <span>Random</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Host Administration -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                    <h3 class="text-xs font-extrabold uppercase tracking-widest text-slate-400">Admin Control Deck</h3>
+                    
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="host-start-btn" onclick="hostToggleGameStatus()" class="px-3 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold flex items-center justify-center space-x-1 btn-hover-transform hover:bg-emerald-700">
+                            <i data-lucide="play" class="w-4 h-4"></i>
+                            <span>Start Game</span>
+                        </button>
+                        <button onclick="hostRestartRound()" class="px-3 py-2 bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold flex items-center justify-center space-x-1 hover:bg-slate-200">
+                            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                            <span>Reset Deck</span>
+                        </button>
+                    </div>
+
+                    <div class="border-t border-slate-100 pt-3">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold text-slate-700">Lock Room Entry</span>
+                            <input type="checkbox" id="lock-joins-toggle" onchange="toggleLockJoins(this.checked)" class="w-4 h-4 text-blue-600">
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-700">Auto Draw Engine</span>
+                            <div class="flex items-center space-x-2">
+                                <input type="number" id="auto-draw-interval" value="5" class="w-10 text-center text-xs font-semibold border rounded">
+                                <span class="text-xs text-slate-400">s</span>
+                                <input type="checkbox" id="auto-draw-toggle" onchange="toggleAutoDraw(this.checked)" class="w-4 h-4 text-blue-600">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Main Broadcast Overlay Dashboard (Smartboard/Projector layout) -->
+            <div class="flex-1 flex flex-col gap-6">
+                
+                <!-- OLED Style Live Draw Screen -->
+                <div class="bg-slate-900 rounded-3xl p-6 text-white flex flex-col justify-between min-h-[350px] shadow-xl relative overflow-hidden">
+                    <div class="absolute -right-16 -top-16 w-64 h-64 bg-yellow-500/10 rounded-full blur-3xl"></div>
+                    <div class="absolute -left-16 -bottom-16 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl"></div>
+                    
+                    <div class="z-10 flex items-center justify-between border-b border-slate-800 pb-3">
+                        <div class="flex items-center space-x-2">
+                            <span class="px-2.5 py-1 bg-yellow-500 text-slate-950 text-[10px] font-extrabold uppercase rounded-full">BROADCAST ACTIVE</span>
+                            <span class="text-xs font-medium text-slate-400" id="broadcast-subtext">Waiting for host draw</span>
+                        </div>
+                        <div class="flex items-center space-x-2 text-slate-400 font-mono text-xs">
+                            <i data-lucide="hash" class="w-4 h-4"></i>
+                            <span id="drawn-count-ratio">Drawn: 0/0</span>
+                        </div>
+                    </div>
+
+                    <!-- Highlight Dynamic Showcase of Drawn Number / Custom Media item -->
+                    <div class="z-10 flex flex-col items-center justify-center my-6">
+                        <div id="big-draw-card" class="w-48 h-48 rounded-2xl bg-slate-950 border-4 border-yellow-500 flex flex-col items-center justify-center shadow-2xl transition-all duration-300 transform scale-100 overflow-hidden p-2">
+                            <span id="big-draw-letter" class="text-xs font-extrabold uppercase tracking-widest text-slate-400">CLASSIC</span>
+                            <div id="big-draw-content" class="flex-1 flex items-center justify-center w-full h-full text-7xl font-black text-white tracking-tighter">
+                                --
+                            </div>
+                        </div>
+                        <div class="h-6 mt-3">
+                            <p id="drawn-ball-spoke-description" class="text-xs text-yellow-400 font-semibold tracking-wide uppercase"></p>
+                        </div>
+                    </div>
+
+                    <!-- Host Drawing Controller Panel -->
+                    <div class="z-10 flex items-center justify-between bg-slate-950/60 p-4 rounded-2xl border border-slate-800">
+                        <div class="flex items-center space-x-2 text-xs">
+                            <span class="w-2.5 h-2.5 bg-yellow-500 rounded-full"></span>
+                            <span class="font-bold">Next Asset Drawn Randomly</span>
+                        </div>
+                        <button onclick="hostTriggerDrawBall()" class="px-6 py-2 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition duration-150 btn-hover-transform flex items-center space-x-1">
+                            <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                            <span>Draw Live Ball</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- History Matrix Panel -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex-1">
+                    <div class="flex items-center justify-between mb-4 border-b pb-2">
+                        <h3 class="text-xs font-extrabold uppercase tracking-widest text-slate-400">Total Deck History Board</h3>
+                        <div class="flex space-x-3 text-xs text-slate-500 font-semibold">
+                            <span class="flex items-center space-x-1"><span class="w-2 h-2 bg-yellow-500 rounded-full"></span> <span>Drawn</span></span>
+                            <span class="flex items-center space-x-1"><span class="w-2 h-2 bg-slate-100 rounded-full border"></span> <span>Uncalled</span></span>
+                        </div>
+                    </div>
+
+                    <!-- Comprehensive Draw Grid (Adapts automatically to Classic Numbers or Custom/Images) -->
+                    <div id="host-draw-grid" class="grid grid-cols-5 md:grid-cols-10 gap-2 max-h-[300px] overflow-y-auto pr-2 font-bold text-xs text-center select-none">
+                        <!-- Loaded dynamically based on grid letters B-I-N-G-O and active image lists -->
+                    </div>
+                </div>
+
+                <!-- Live Audience & Player Connected Monitor -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-4 border-b pb-2">
+                        <div class="flex items-center space-x-2">
+                            <h3 class="text-xs font-extrabold uppercase tracking-widest text-slate-400">Audience Lobby Pool</h3>
+                            <span id="player-count-pill" class="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">0 Joined</span>
+                        </div>
+                        <button onclick="kickAllPlayers()" class="text-xs text-red-500 font-semibold hover:underline">Kick All</button>
+                    </div>
+
+                    <div id="host-players-list" class="grid grid-cols-2 md:grid-cols-4 gap-3 max-h-[150px] overflow-y-auto pr-2">
+                        <!-- Active joined player profiles render here -->
+                        <div class="col-span-full py-4 text-center text-slate-400 text-xs">
+                            No players connected. Share the room ID or QR Code to invite users.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- ==================== TAB 3: REAL-TIME PLAYER SYNC HUB ==================== -->
+        <section id="tab-player" class="w-full hidden flex-col lg:flex-row gap-6 p-4 md:p-6 justify-center">
+            
+            <!-- Connection Setup if not joined -->
+            <div id="player-setup-card" class="w-full max-w-md bg-white p-6 rounded-3xl border border-slate-200 shadow-xl self-center space-y-4 my-10">
+                <div class="text-center">
+                    <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i data-lucide="user-plus" class="w-6 h-6"></i>
+                    </div>
+                    <h2 class="text-lg font-extrabold text-slate-900">Join Active Bingo Arena</h2>
+                    <p class="text-xs text-slate-500">Participate in real-time hosting tournaments live</p>
+                </div>
+
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Your Nickname</label>
+                        <input type="text" id="player-name-input" placeholder="e.g. WinnerMac" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Game Room ID</label>
+                        <input type="text" id="player-room-input" placeholder="e.g. ROOM-XXXX" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm font-mono font-bold focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    
+                    <button onclick="playerConnectToRoom()" class="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-extrabold rounded-xl text-xs flex items-center justify-center space-x-2 transition shadow-lg shadow-purple-100 btn-hover-transform">
+                        <i data-lucide="radio" class="w-4 h-4"></i>
+                        <span>Sync Live Card Now</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Connected Live Card Playboard (Completely Sandboxed isolated play zone) -->
+            <div id="player-game-board" class="hidden w-full max-w-4xl flex flex-col md:flex-row gap-6">
+                
+                <!-- Info Tray Sidepanel -->
+                <div class="w-full md:w-[280px] shrink-0 space-y-4">
+                    
+                    <!-- Player Details Card -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="flex items-center space-x-3 mb-3">
+                            <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-sm font-extrabold uppercase" id="player-avatar-letter">M</div>
+                            <div>
+                                <h4 class="text-xs font-extrabold text-slate-900" id="player-profile-name">Username</h4>
+                                <span class="text-[10px] text-emerald-600 font-bold flex items-center"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-1"></span> Live Synced</span>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-slate-100 pt-3 space-y-2 text-xs">
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Current Arena:</span>
+                                <span class="font-bold text-slate-700" id="player-connected-room">--</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Card Setup ID:</span>
+                                <span class="font-bold text-slate-700 font-mono" id="player-card-uid">#0001</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Target Winning Pattern display -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                        <h4 class="text-xs font-extrabold uppercase tracking-widest text-slate-400 mb-2.5">Target Win Pattern</h4>
+                        <div id="player-pattern-display-wrapper" class="bg-slate-900 p-3 rounded-3xl border border-slate-950 shadow-inner">
+                            <!-- Selected Target Pattern preview -->
+                        </div>
+                        <p class="text-[10px] text-slate-400 text-center mt-2.5">Match these coordinates perfectly to claim victory.</p>
+                    </div>
+
+                    <!-- Client settings (Auto-Daub toggle etc) -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                        <h4 class="text-xs font-extrabold uppercase tracking-widest text-slate-400">Daub Settings</h4>
+                        
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold text-slate-700">Auto Daub Items</span>
+                            <input type="checkbox" id="toggle-auto-daub" class="w-4 h-4 text-purple-600">
+                        </div>
+                        
+                        <button onclick="playerTriggerClaimBingo()" class="w-full py-3 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-slate-950 text-sm font-black tracking-widest rounded-xl transition duration-150 btn-hover-transform shadow-lg shadow-yellow-200 flex items-center justify-center space-x-1">
+                            <i data-lucide="crown" class="w-5 h-5 text-slate-950 animate-bounce"></i>
+                            <span>BINGO!</span>
+                        </button>
+                    </div>
+
+                </div>
+
+                <!-- Connected Digital Play Card Grid -->
+                <div class="flex-1 flex flex-col gap-4">
+                    
+                    <!-- Live Dynamic Host Draw Spotlight Bar -->
+                    <div class="bg-slate-900 text-white p-4 rounded-2xl flex items-center justify-between border border-slate-800 shadow-md">
+                        <div class="flex items-center space-x-3">
+                            <div id="player-spotlight-display" class="w-12 h-12 rounded-xl bg-yellow-500 text-slate-950 font-black text-lg flex items-center justify-center shadow-lg shadow-yellow-500/20 overflow-hidden">
+                                --
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-slate-400 uppercase tracking-widest font-extrabold">Live Host Draw Spotlight</p>
+                                <p id="player-draw-notification-text" class="text-xs font-semibold text-white">Let the matches begin!</p>
+                            </div>
+                        </div>
+
+                        <div class="text-right">
+                            <span class="text-[10px] text-slate-400 font-bold block">Round Call #</span>
+                            <span id="player-round-call-seq" class="text-sm font-black font-mono">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Actual Digital Interactive Bingo Card Grid -->
+                    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-md flex items-center justify-center relative">
+                        <div id="player-interactive-card-element" class="w-full max-w-[480px]">
+                            <!-- Dynamic customized client bingo grid -->
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Professional Workspace Branding Footer (Hidden in isolated player view mode) -->
+    <footer id="main-footer" class="w-full text-center py-4 text-[10px] font-mono text-slate-400 border-t border-slate-200 bg-slate-50 mt-auto">
+        BINGO MAKER PRO Enterprise real-time system, powered by HTML5/IndexedDB/WebSockets. Developed by Cedventures, Taiwan.
+    </footer>
+
+    <!-- Saved Projects Recovery Dialog Modal -->
+    <div id="project-loader-modal" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b pb-2">
+                <h3 class="font-extrabold text-sm text-slate-900 uppercase">Save / Restore Workspace</h3>
+                <button onclick="closeProjectsModal()" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            
+            <div id="saved-projects-list" class="space-y-2 max-h-[250px] overflow-y-auto pr-2">
+                <!-- Dynamically loaded list of saved cards -->
+            </div>
+        </div>
+    </div>
+
+    <!-- General Info Help / Tutorial Modal -->
+    <div id="info-modal" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-3xl p-6 shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b pb-3">
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="info" class="w-5 h-5 text-blue-500"></i>
+                    <h3 class="font-extrabold text-sm text-slate-900 uppercase tracking-widest">Enterprise Platform Guide</h3>
+                </div>
+                <button onclick="toggleInfoModal()" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <div class="space-y-4 text-xs text-slate-600 leading-relaxed">
+                <div>
+                    <h4 class="font-bold text-slate-800 text-sm mb-1">1. Interconnected Asset Engine</h4>
+                    <p>Any batch image uploads or custom dictionary items created in the Card Designer tab instantly populate the host's broadcast draw deck and dynamically render on the player’s personal digital cards.</p>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-800 text-sm mb-1">2. Isolated Player Environment</h4>
+                    <p>When users connect to your dynamic Game Room, they only see their custom responsive Play Card grid—ensuring they cannot access administrative broadcast host controls or the designer workspace.</p>
+                </div>
+                <div class="p-3 bg-slate-50 border rounded-xl text-[11px] text-slate-500 font-mono">
+                    <strong>Technical Setup Note:</strong> This server-less simulation uses client-side IndexedDB events, WebSockets, and LocalStorage variables to mimic high-performance real-time servers completely offline, ensuring instant offline capability.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive Toast Alerts -->
+    <div id="toast-wrapper" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
+
+    <!-- ========================================== JAVASCRIPT SYSTEM ENGINE ========================================== -->
+    <script>
+        // System State
+        let state = {
+            projectName: "Interactive Classic Bingo",
+            gridSize: 5,
+            centerCellMode: "free",
+            generatorType: "numbers", // "numbers" or "custom"
+            customVocab: [],
+            batchImages: [], // array of base64 images
+            cardCount: 5,
+            headerStyle: "classic", // "classic", "custom", "none"
+            headerCustomText: "BINGO",
+            themeColor: "#1e293b",
+            gridlineColor: "#cbd5e1",
+            gridlineThickness: "2",
+            fontScale: "20",
+            fontFamily: "sans-serif",
+            watermarkEnabled: false,
+            watermarkText: "EVENT EXCLUSIVE",
+            watermarkOpacity: "0.1",
+            watermarkRotation: "-30",
+            cutGuidesEnabled: true,
+            brandingFooter: true,
+            
+            // Preview States
+            activeCards: [], // Current array of generated card objects
+            selectedPreviewSheet: 0,
+            printLayoutMode: "1", // "1", "2", "4" per sheet
+            
+            // Undo/Redo tracking
+            history: [],
+            historyIdx: -1,
+
+            // Multiplayer Simulation Room States
+            hostRoomId: "ROOM-8142",
+            hostGameState: "stopped", // "playing", "paused", "stopped"
+            hostPattern: [
+                [true, true, true, true, true],
+                [true, true, true, true, true],
+                [true, true, true, true, true],
+                [true, true, true, true, true],
+                [true, true, true, true, true]
+            ], // default blackout
+            drawnNumbers: [], // holds drawn indices or values
+            lastDrawnNumber: null,
+            connectedPlayers: [],
+            autoDrawIntervalId: null,
+
+            // Joined Player States
+            playerName: "",
+            playerRoom: "",
+            playerCard: null,
+            playerMarkedCells: [] // coordinates marked
+        };
+
+        // Static Letter Labels
+        const LETTERS = ['B', 'I', 'N', 'G', 'O'];
+
+        // Initial setup on window load
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            
+            // Initialize with default standard card generator content
+            resetCustomVocabDefault();
+            generateBingoCards();
+            
+            // Check for direct isolated player URL simulation (?player=true)
+            const urlParams = new URLSearchParams(window.location.search);
+            const isIsolatedPlayer = urlParams.get('room') || urlParams.get('player') === 'true';
+            
+            if (isIsolatedPlayer) {
+                isolatePlayerView(urlParams.get('room'));
+            } else {
+                generateHostRoomId();
+                initializeHostDrawHistoryGrid();
+                applyPresetPattern('blackout');
+            }
+
+            // Save initial snapshot
+            saveHistoryState();
+        });
+
+        // Sandboxes the interface so a player can only see their card and nothing else
+        function isolatePlayerView(autoRoomId) {
+            // Hide header, designer controls, host controls, and footers
+            const header = document.getElementById('main-header');
+            const footer = document.getElementById('main-footer');
+            if (header) header.style.display = 'none';
+            if (footer) footer.style.display = 'none';
+
+            // Show and switch to Player Sync Hub strictly
+            document.getElementById('tab-designer').style.display = 'none';
+            document.getElementById('tab-host').style.display = 'none';
+            document.getElementById('tab-player').classList.remove('hidden');
+            document.getElementById('tab-player').style.display = 'flex';
+
+            if (autoRoomId) {
+                document.getElementById('player-room-input').value = autoRoomId.toUpperCase();
+            }
+            showNotification("Isolated Player View Activated", "You have entered private player gameplay mode.", "info");
+        }
+
+        // Toast alert assistant
+        function showNotification(title, msg, type = 'success') {
+            const wrapper = document.getElementById('toast-wrapper');
+            const toast = document.createElement('div');
+            toast.className = `p-4 rounded-xl border shadow-lg bg-white flex items-start space-x-3 transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto max-w-[320px]`;
+            
+            let colorClass = 'text-blue-500 bg-blue-50 border-blue-200';
+            let icon = 'info';
+            if (type === 'success') {
+                colorClass = 'text-emerald-500 bg-emerald-50 border-emerald-200';
+                icon = 'check-circle';
+            } else if (type === 'error') {
+                colorClass = 'text-red-500 bg-red-50 border-red-200';
+                icon = 'alert-triangle';
+            } else if (type === 'warning') {
+                colorClass = 'text-amber-500 bg-amber-50 border-amber-200';
+                icon = 'alert-circle';
+            }
+
+            toast.innerHTML = `
+                <div class="p-1 rounded-lg ${colorClass}">
+                    <i data-lucide="${icon}" class="w-4 h-4"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="text-xs font-bold text-slate-800">${title}</p>
+                    <p class="text-[10px] text-slate-500 leading-normal">${msg}</p>
+                </div>
+            `;
+            wrapper.appendChild(toast);
+            lucide.createIcons();
+            
+            // Trigger animation
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 50);
+
+            // Hide and remove
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 3500);
+        }
+
+        // Switch main tab views (Admin mode only)
+        function switchMainTab(target) {
+            document.getElementById('tab-designer').classList.add('hidden');
+            document.getElementById('tab-host').classList.add('hidden');
+            document.getElementById('tab-player').classList.add('hidden');
+
+            document.getElementById('nav-designer-btn').className = "px-4 py-2 text-xs font-semibold rounded-lg flex items-center space-x-2 transition-all text-slate-600 hover:text-slate-900";
+            document.getElementById('nav-host-btn').className = "px-4 py-2 text-xs font-semibold rounded-lg flex items-center space-x-2 transition-all text-slate-600 hover:text-slate-900";
+            document.getElementById('nav-player-btn').className = "px-4 py-2 text-xs font-semibold rounded-lg flex items-center space-x-2 transition-all text-slate-600 hover:text-slate-900";
+
+            if (target === 'designer') {
+                document.getElementById('tab-designer').classList.remove('hidden');
+                document.getElementById('nav-designer-btn').className = "px-4 py-2 text-xs font-semibold rounded-lg flex items-center space-x-2 transition-all bg-white text-slate-900 shadow-sm";
+            } else if (target === 'host') {
+                document.getElementById('tab-host').classList.remove('hidden');
+                document.getElementById('nav-host-btn').className = "px-4 py-2 text-xs font-semibold rounded-lg flex items-center space-x-2 transition-all bg-white text-slate-900 shadow-sm";
+                refreshHostQRCode();
+                initializeHostDrawHistoryGrid();
+            } else if (target === 'player') {
+                document.getElementById('tab-player').classList.remove('hidden');
+                document.getElementById('nav-player-btn').className = "px-4 py-2 text-xs font-semibold rounded-lg flex items-center space-x-2 transition-all bg-white text-slate-900 shadow-sm";
+            }
+        }
+
+        // Help Modal Toggle
+        function toggleInfoModal() {
+            const modal = document.getElementById('info-modal');
+            modal.classList.toggle('hidden');
+        }
+
+        // ========================================== CARD DESIGNER & CANVAS CORE ==========================================
+
+        function resetCustomVocabDefault() {
+            const defaults = ["Apple", "Orange", "Grape", "Banana", "Cherry", "Strawberry", "Melon", "Watermelon", "Peach", "Plum", "Kiwi", "Mango", "Papaya", "Lemon", "Lime", "Coconut", "Pineapple", "Guava", "Avocado", "Blueberry", "Raspberry", "Dragonfruit", "Passionfruit", "Pomegranate", "Durian"];
+            document.getElementById('custom-vocab-input').value = defaults.join('\n');
+            state.customVocab = defaults;
+        }
+
+        function setGeneratorType(type) {
+            state.generatorType = type;
+            document.getElementById('gen-type-numbers').className = "px-3 py-2 rounded-lg text-xs font-bold border flex items-center justify-center space-x-1 " + 
+                (type === 'numbers' ? 'border-blue-500 bg-blue-50 text-blue-600' : 'border-slate-200 text-slate-600 hover:bg-slate-50');
+            document.getElementById('gen-type-custom').className = "px-3 py-2 rounded-lg text-xs font-bold border flex items-center justify-center space-x-1 " + 
+                (type === 'custom' ? 'border-blue-500 bg-blue-50 text-blue-600' : 'border-slate-200 text-slate-600 hover:bg-slate-50');
+
+            const vocabSettings = document.getElementById('vocab-settings-box');
+            if (type === 'custom') {
+                vocabSettings.classList.remove('hidden');
+            } else {
+                vocabSettings.classList.add('hidden');
+            }
+            saveHistoryState();
+            generateBingoCards();
+        }
+
+        function changeGridSize(size) {
+            state.gridSize = size;
+            saveHistoryState();
+            generateBingoCards();
+        }
+
+        // Setup middle index dynamic locator according to selected grid dimension sizing
+        function getCenterIndex() {
+            return Math.floor((state.gridSize * state.gridSize) / 2);
+        }
+
+        function setCenterCellMode(mode) {
+            state.centerCellMode = mode;
+            saveHistoryState();
+            generateBingoCards();
+        }
+
+        function setHeaderStyle(style) {
+            state.headerStyle = style;
+            const input = document.getElementById('header-custom-text');
+            if (style === 'custom') {
+                input.classList.remove('hidden');
+            } else {
+                input.classList.add('hidden');
+            }
+            saveHistoryState();
+            applyCardStyling();
+        }
+
+        function updateHeaderCustomText(txt) {
+            state.headerCustomText = txt;
+            applyCardStyling();
+        }
+
+        function updateProjectTitle(title) {
+            state.projectName = title;
+            document.getElementById('preview-sheet-project-name').innerText = title;
+        }
+
+        // File loading handling
+        function handleBatchImagesUpload(files) {
+            state.batchImages = [];
+            let loadedCount = 0;
+            for (let i = 0; i < files.length; i++) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    state.batchImages.push(e.target.result);
+                    loadedCount++;
+                    if (loadedCount === files.length) {
+                        const countEl = document.getElementById('batch-image-preview-count');
+                        countEl.innerText = `Successfully loaded ${loadedCount} images`;
+                        countEl.classList.remove('hidden');
+                        showNotification("Images Loaded", `${loadedCount} images prepared for distribution!`, "success");
+                        generateBingoCards();
+                    }
+                }
+                reader.readAsDataURL(files[i]);
+            }
+        }
+
+        // Generate dynamic collection of cards with random distribution arrangements
+        function generateBingoCards() {
+            const count = parseInt(document.getElementById('batch-card-count').value) || 5;
+            state.cardCount = count;
+            state.activeCards = [];
+
+            // Fetch custom vocab array
+            if (state.generatorType === 'custom') {
+                const rawVal = document.getElementById('custom-vocab-input').value;
+                state.customVocab = rawVal.split('\n').map(x => x.trim()).filter(x => x.length > 0);
+            }
+
+            const totalCellsNeeded = state.gridSize * state.gridSize;
+            const centerIdx = getCenterIndex();
+
+            for (let cardIdx = 0; cardIdx < count; cardIdx++) {
+                let cellData = Array(totalCellsNeeded).fill(null);
+
+                // Set FREE space cell if active
+                if (state.centerCellMode === 'free') {
+                    cellData[centerIdx] = {
+                        type: 'free',
+                        value: 'FREE'
+                    };
+                }
+
+                // If images are uploaded, populate all slots with images exclusively (tiling/replicating if pool size is small)
+                if (state.batchImages.length > 0) {
+                    let imagePool = [];
+                    while (imagePool.length < totalCellsNeeded) {
+                        let shuffledBatch = [...state.batchImages].sort(() => Math.random() - 0.5);
+                        imagePool = imagePool.concat(shuffledBatch);
+                    }
+
+                    let imgPoolIdx = 0;
+                    for (let i = 0; i < totalCellsNeeded; i++) {
+                        if (i === centerIdx && state.centerCellMode === 'free') continue;
+                        cellData[i] = {
+                            type: 'image',
+                            value: imagePool[imgPoolIdx++],
+                            scale: 85,
+                            fitMode: 'contain'
+                        };
+                    }
+                } else {
+                    // Regular number or text rendering mode
+                    if (state.generatorType === 'numbers') {
+                        let colData = [];
+                        for (let col = 0; col < state.gridSize; col++) {
+                            let minVal = col * 15 + 1;
+                            let maxVal = col * 15 + 15;
+                            let available = [];
+                            for (let n = minVal; n <= maxVal; n++) available.push(n);
+                            
+                            available.sort(() => Math.random() - 0.5);
+                            colData.push(available.slice(0, state.gridSize));
+                        }
+
+                        // Map columns to rows
+                        for (let row = 0; row < state.gridSize; row++) {
+                            for (let col = 0; col < state.gridSize; col++) {
+                                const targetIdx = row * state.gridSize + col;
+                                if (targetIdx === centerIdx && state.centerCellMode === 'free') continue;
+                                cellData[targetIdx] = {
+                                    type: 'number',
+                                    value: colData[col][row]
+                                };
+                            }
+                        }
+                    } else {
+                        // Custom Vocabulary Mode
+                        let pool = [...state.customVocab];
+                        while (pool.length < totalCellsNeeded) {
+                            pool.push(`Slot-${pool.length + 1}`);
+                        }
+                        pool.sort(() => Math.random() - 0.5);
+
+                        let vocabPoolIdx = 0;
+                        for (let i = 0; i < totalCellsNeeded; i++) {
+                            if (i === centerIdx && state.centerCellMode === 'free') continue;
+                            cellData[i] = {
+                                type: 'text',
+                                value: pool[vocabPoolIdx++]
+                            };
+                        }
+                    }
+                }
+
+                state.activeCards.push({
+                    id: cardIdx + 1,
+                    uid: `C-${Math.floor(1000 + Math.random() * 9000)}`,
+                    cells: cellData
+                });
+            }
+
+            state.selectedPreviewSheet = 0;
+            applyCardStyling();
+            showNotification("Cards Crafted", `${count} unique Bingo patterns initialized.`, "success");
+            
+            // Push changes dynamically to update active broadcast deck options
+            syncStateToJoinedPlayers();
+        }
+
+        // Change overall page printing layouts
+        function changePrintLayout(layout) {
+            state.printLayoutMode = layout;
+            applyCardStyling();
+        }
+
+        function cycleSelectedPreviewPage(dir) {
+            const totalSheets = Math.ceil(state.activeCards.length / parseInt(state.printLayoutMode));
+            state.selectedPreviewSheet = (state.selectedPreviewSheet + dir + totalSheets) % totalSheets;
+            applyCardStyling();
+        }
+
+        // Apply style controls onto HTML view canvas elements
+        function applyCardStyling() {
+            // Read UI element values directly
+            state.themeColor = document.getElementById('theme-color').value;
+            state.gridlineColor = document.getElementById('gridline-color').value;
+            state.gridlineThickness = document.getElementById('gridline-thickness').value;
+            state.fontScale = document.getElementById('font-scale').value;
+            state.fontFamily = document.getElementById('card-font-family').value;
+            state.watermarkEnabled = document.getElementById('watermark-enabled').checked;
+            state.watermarkText = document.getElementById('watermark-text').value;
+            state.watermarkOpacity = document.getElementById('watermark-opacity').value;
+            state.watermarkRotation = document.getElementById('watermark-rotation').value;
+            state.cutGuidesEnabled = document.getElementById('cut-guides-enabled').checked;
+            state.brandingFooter = document.getElementById('branding-footer').checked;
+
+            // Render Preview Pages based on printLayoutMode
+            const wrapper = document.getElementById('print-cards-grid-wrapper');
+            if (wrapper) {
+                wrapper.innerHTML = '';
+
+                const cardsPerSheet = parseInt(state.printLayoutMode);
+                const startIndex = state.selectedPreviewSheet * cardsPerSheet;
+                const endIndex = Math.min(startIndex + cardsPerSheet, state.activeCards.length);
+
+                // Update footer visibility
+                document.getElementById('creator-branding-tag').style.opacity = state.brandingFooter ? '0.4' : '0';
+
+                // Set wrapper grid sizing classes depending on count
+                if (cardsPerSheet === 1) {
+                    wrapper.className = "flex-1 grid grid-cols-1 gap-6 items-center justify-center p-2";
+                } else if (cardsPerSheet === 2) {
+                    wrapper.className = "flex-1 grid grid-cols-2 gap-4 items-center justify-center p-2";
+                } else {
+                    wrapper.className = "flex-1 grid grid-cols-2 gap-3 items-center justify-center p-2";
+                }
+
+                for (let i = startIndex; i < endIndex; i++) {
+                    const card = state.activeCards[i];
+                    if (!card) continue;
+                    
+                    const cardHtml = renderCardHTMLMarkup(card);
+                    wrapper.appendChild(cardHtml);
+                }
+
+                // Sync page indicators
+                const totalSheets = Math.ceil(state.activeCards.length / cardsPerSheet);
+                document.getElementById('preview-page-indicator').innerText = `Sheet ${state.selectedPreviewSheet + 1} / ${totalSheets || 1}`;
+            }
+            lucide.createIcons();
+        }
+
+        // Return independent card markup block (Locked configuration representation)
+        function renderCardHTMLMarkup(card) {
+            const cardContainer = document.createElement('div');
+            // Strict physical limits enforced via inline height and max width configurations
+            cardContainer.className = "bg-white p-4 border rounded-2xl relative shadow-md flex flex-col justify-between overflow-hidden select-none w-full max-w-[420px] aspect-[1/1.25] shrink-0 mx-auto";
+            cardContainer.style.borderColor = state.gridlineColor;
+            cardContainer.style.borderWidth = `${state.gridlineThickness}px`;
+            
+            // Apply Safe guides if toggled
+            if (state.cutGuidesEnabled) {
+                cardContainer.classList.add('after:absolute', 'after:inset-1', 'after:border', 'after:border-dashed', 'after:border-slate-300', 'after:pointer-events-none');
+            }
+
+            // Calculate scaled activeFontScale proportionally depending on the print layout configuration
+            const cardsPerSheet = parseInt(state.printLayoutMode);
+            let layoutScaleFactor = 1.0;
+            if (cardsPerSheet === 2) {
+                layoutScaleFactor = 0.70;
+            } else if (cardsPerSheet === 4) {
+                layoutScaleFactor = 0.45;
+            }
+            const activeFontScale = Math.max(8, Math.round(state.fontScale * layoutScaleFactor));
+
+            // Heading logic
+            let headingMarkup = '';
+            if (state.headerStyle !== 'none') {
+                let letters = LETTERS;
+                if (state.headerStyle === 'custom') {
+                    const customLetters = state.headerCustomText.toUpperCase().split('');
+                    letters = customLetters.slice(0, state.gridSize);
+                    while (letters.length < state.gridSize) letters.push('X');
+                } else if (state.gridSize !== 5) {
+                    letters = LETTERS.slice(0, state.gridSize);
+                }
+
+                headingMarkup = `<div class="grid grid-cols-${state.gridSize} gap-1 mb-2 font-black tracking-wider text-center shrink-0" style="font-family: ${state.fontFamily}; color: ${state.themeColor};">`;
+                for (let h = 0; h < state.gridSize; h++) {
+                    headingMarkup += `<span class="text-lg md:text-xl border-b pb-1" style="border-color: ${state.gridlineColor}">${letters[h]}</span>`;
+                }
+                headingMarkup += `</div>`;
+            }
+
+            // Grid markup
+            let gridMarkup = `<div class="grid grid-cols-${state.gridSize} gap-1 relative select-none w-full flex-1" style="aspect-ratio: 1/1;">`;
+            
+            // Embed Watermark backdrop if enabled
+            if (state.watermarkEnabled) {
+                gridMarkup += `
+                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-10 font-bold overflow-hidden" 
+                         style="opacity: ${state.watermarkOpacity}; transform: rotate(${state.watermarkRotation}deg); font-size: ${activeFontScale * 1.5}px; font-family: ${state.fontFamily}; color: ${state.themeColor};">
+                        ${state.watermarkText}
+                    </div>
+                `;
+            }
+
+            // Cell elements rendering loop
+            const totalCells = state.gridSize * state.gridSize;
+            const centerIdx = getCenterIndex();
+
+            for (let c = 0; c < totalCells; c++) {
+                const cell = card.cells[c];
+                let contentMarkup = '';
+                let hoverEditOverlay = '';
+
+                if (cell.type === 'free' || (c === centerIdx && state.centerCellMode === 'free')) {
+                    // Center cell is strictly locked to follow layout grid, scaling text proportionally.
+                    contentMarkup = `<div id="cell-val-container-${card.id}-${c}" class="w-full h-full flex items-center justify-center text-center overflow-hidden" style="font-size: ${activeFontScale}px;"><span class="font-extrabold text-amber-500 tracking-tight animate-pulse leading-none break-words px-1">${cell.value}</span></div>`;
+                    hoverEditOverlay = `
+                        <!-- Mini Interactive Edit control overlay -->
+                        <div class="absolute inset-x-0 bottom-0 bg-slate-900/90 text-white flex items-center justify-center py-1 opacity-0 group-hover:opacity-100 transition duration-150 text-[10px] z-20">
+                            <button onclick="startInlineCellEdit(event, ${card.id}, ${c})" title="Edit Text" class="px-2 py-0.5 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-extrabold rounded-[3px] text-[8px] uppercase tracking-wider flex items-center space-x-1">
+                                <i data-lucide="edit-3" class="w-3 h-3"></i>
+                                <span>Edit</span>
+                            </button>
+                        </div>
+                    `;
+                } else if (cell.type === 'number') {
+                    contentMarkup = `<div id="cell-val-container-${card.id}-${c}" class="w-full h-full flex items-center justify-center" style="font-size: ${activeFontScale}px;"><span class="text-slate-900 font-extrabold leading-none">${cell.value}</span></div>`;
+                    hoverEditOverlay = `
+                        <!-- Mini Interactive Edit control overlay -->
+                        <div class="absolute inset-x-0 bottom-0 bg-slate-900/90 text-white flex items-center justify-center py-1 opacity-0 group-hover:opacity-100 transition duration-150 text-[10px] z-20">
+                            <button onclick="startInlineCellEdit(event, ${card.id}, ${c})" title="Edit Text" class="px-2 py-0.5 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-extrabold rounded-[3px] text-[8px] uppercase tracking-wider flex items-center space-x-1">
+                                <i data-lucide="edit-3" class="w-3 h-3"></i>
+                                <span>Edit</span>
+                            </button>
+                        </div>
+                    `;
+                } else if (cell.type === 'image') {
+                    const currentScale = cell.scale || 85;
+                    const currentFit = cell.fitMode || 'contain';
+                    contentMarkup = `
+                        <div class="relative w-full h-full flex items-center justify-center overflow-hidden">
+                            <img src="${cell.value}" class="rounded transition-all duration-150" style="width: ${currentScale}%; height: ${currentScale}%; object-fit: ${currentFit};" />
+                            <!-- Mini Interactive Resize controls overlay -->
+                            <div class="absolute inset-x-0 bottom-0 bg-slate-900/90 text-white flex items-center justify-center space-x-1 py-1 opacity-0 group-hover:opacity-100 transition duration-150 text-[10px] z-20">
+                                <button onclick="changeCellImageScale(event, ${card.id}, ${c}, -10)" title="Scale Down" class="px-1.5 hover:text-yellow-400 font-extrabold text-xs">-</button>
+                                <button onclick="changeCellImageScale(event, ${card.id}, ${c}, 10)" title="Scale Up" class="px-1.5 hover:text-yellow-400 font-extrabold text-xs">+</button>
+                                <button onclick="fitCellImageToGrid(event, ${card.id}, ${c})" title="Fit Mode" class="px-1 bg-yellow-500 text-slate-950 font-bold rounded-[3px] text-[8px] uppercase tracking-tighter">Fit</button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    contentMarkup = `<div id="cell-val-container-${card.id}-${c}" class="w-full h-full flex items-center justify-center text-center px-1" style="font-size: ${activeFontScale}px;"><span class="text-slate-800 font-bold leading-tight break-all">${cell.value}</span></div>`;
+                    hoverEditOverlay = `
+                        <!-- Mini Interactive Edit control overlay -->
+                        <div class="absolute inset-x-0 bottom-0 bg-slate-900/90 text-white flex items-center justify-center py-1 opacity-0 group-hover:opacity-100 transition duration-150 text-[10px] z-20">
+                            <button onclick="startInlineCellEdit(event, ${card.id}, ${c})" title="Edit Text" class="px-2 py-0.5 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-extrabold rounded-[3px] text-[8px] uppercase tracking-wider flex items-center space-x-1">
+                                <i data-lucide="edit-3" class="w-3 h-3"></i>
+                                <span>Edit</span>
+                            </button>
+                        </div>
+                    `;
+                }
+
+                gridMarkup += `
+                    <div id="card-cell-wrapper-${card.id}-${c}" class="flex items-center justify-center border text-center relative bg-slate-50/50 hover:bg-slate-100 transition group" 
+                         style="border-color: ${state.gridlineColor}; border-width: 1px; font-family: ${state.fontFamily}; aspect-ratio: 1/1; overflow: hidden;"
+                         onclick="interactiveCardDaub(this, ${card.id}, ${c})"
+                         ondblclick="startInlineCellEdit(event, ${card.id}, ${c})">
+                        ${contentMarkup}
+                        ${hoverEditOverlay}
+                    </div>
+                `;
+            }
+            gridMarkup += `</div>`;
+
+            cardContainer.innerHTML = `
+                <div class="flex flex-col flex-1">
+                    ${headingMarkup}
+                    ${gridMarkup}
+                </div>
+                <div class="mt-2 flex items-center justify-between text-[8px] text-slate-400 font-mono shrink-0">
+                    <span>Card Index ID: ${card.uid}</span>
+                    <span>BINGO PRO</span>
+                </div>
+            `;
+            return cardContainer;
+        }
+
+        // Interactive dynamic controls to scale custom assigned images inside locked grid boxes
+        function changeCellImageScale(event, cardId, cellIdx, delta) {
+            event.stopPropagation(); // Prevent card cell stamp-marking toggle
+            const card = state.activeCards.find(c => c.id === cardId);
+            if (card && card.cells[cellIdx]) {
+                let currentScale = card.cells[cellIdx].scale || 85;
+                currentScale = Math.max(10, Math.min(250, currentScale + delta));
+                card.cells[cellIdx].scale = currentScale;
+                applyCardStyling();
+                saveHistoryState();
+                showNotification("Image Resized", `Scale adjusted to ${currentScale}%`, "info");
+            }
+        }
+
+        // Toggle assigned images between contain fit and full-bleed cover grid cells
+        function fitCellImageToGrid(event, cardId, cellIdx) {
+            event.stopPropagation(); // Prevent card cell stamp-marking toggle
+            const card = state.activeCards.find(c => c.id === cardId);
+            if (card && card.cells[cellIdx]) {
+                const currentFit = card.cells[cellIdx].fitMode || 'contain';
+                if (currentFit === 'contain') {
+                    card.cells[cellIdx].fitMode = 'cover';
+                    card.cells[cellIdx].scale = 100;
+                    showNotification("Fitted image", "Cover alignment set (fills container perfectly)", "success");
+                } else {
+                    card.cells[cellIdx].fitMode = 'contain';
+                    card.cells[cellIdx].scale = 85;
+                    showNotification("Fitted image", "Contain alignment set (centered safely)", "info");
+                }
+                applyCardStyling();
+                saveHistoryState();
+            }
+        }
+
+        // Seamless Inline Cell Edit Initiator
+        function startInlineCellEdit(event, cardId, cellIdx) {
+            event.stopPropagation(); // Prevent card cell marking toggle
+            
+            const card = state.activeCards.find(c => c.id === cardId);
+            if (!card || !card.cells[cellIdx]) return;
+
+            const cellWrapper = document.getElementById(`cell-val-container-${cardId}-${cellIdx}`);
+            if (!cellWrapper) return;
+
+            // Extract the current value
+            const currentValue = card.cells[cellIdx].value;
+
+            // Determine active scaling size inside active preview
+            const cardsPerSheet = parseInt(state.printLayoutMode);
+            let layoutScaleFactor = 1.0;
+            if (cardsPerSheet === 2) {
+                layoutScaleFactor = 0.70;
+            } else if (cardsPerSheet === 4) {
+                layoutScaleFactor = 0.45;
+            }
+            const activeFontScale = Math.max(8, Math.round(state.fontScale * layoutScaleFactor));
+
+            // Inject inline input field with correct absolute scaling size matching parent parameters
+            cellWrapper.innerHTML = `
+                <input type="text" id="inline-input-${cardId}-${cellIdx}" 
+                       class="w-[95%] text-center font-extrabold text-slate-900 border-2 border-blue-500 rounded bg-white px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-300 z-30 relative"
+                       style="font-size: ${Math.max(11, Math.round(activeFontScale * 0.85))}px;"
+                       value="${currentValue}" 
+                       onblur="saveInlineCellEdit(this, ${cardId}, ${cellIdx})" 
+                       onkeydown="handleCellEditKey(event, this, ${cardId}, ${cellIdx})" 
+                       onclick="event.stopPropagation()"
+                       ondblclick="event.stopPropagation()" />
+            `;
+
+            // Focus and Select the text
+            const inputField = document.getElementById(`inline-input-${cardId}-${cellIdx}`);
+            if (inputField) {
+                inputField.focus();
+                inputField.select();
+            }
+        }
+
+        // Key handler inside inline input (Enter/Escape navigation)
+        function handleCellEditKey(event, inputElement, cardId, cellIdx) {
+            if (event.key === 'Enter') {
+                inputElement.blur(); // Triggers saveInlineCellEdit
+            } else if (event.key === 'Escape') {
+                // Cancel edit - re-render without committing changes
+                applyCardStyling();
+                showNotification("Edit Cancelled", "No changes were made.", "info");
+            }
+        }
+
+        // Save inline cell input back to active memory configuration stack
+        function saveInlineCellEdit(inputElement, cardId, cellIdx) {
+            const newValue = inputElement.value.trim();
+            const card = state.activeCards.find(c => c.id === cardId);
+            if (card && card.cells[cellIdx]) {
+                const oldValue = card.cells[cellIdx].value;
+                if (newValue !== "" && newValue !== oldValue) {
+                    card.cells[cellIdx].value = newValue;
+                    // If it was traditional number mode, label modified slots as custom texts
+                    if (card.cells[cellIdx].type === 'number' && isNaN(newValue)) {
+                        card.cells[cellIdx].type = 'text';
+                    } else if (card.cells[cellIdx].type === 'text' && !isNaN(newValue)) {
+                        card.cells[cellIdx].type = 'number';
+                    }
+
+                    saveHistoryState();
+                    showNotification("Cell Edited", `Updated successfully from "${oldValue}" to "${newValue}"`, "success");
+                }
+            }
+            // Re-render sheet preview layout perfectly
+            applyCardStyling();
+        }
+
+        // Live manual clicking on interactive grids inside preview sheet
+        function interactiveCardDaub(cellElement, cardId, cellIndex) {
+            // Check if user clicked resize/edit controls or active inputs inside cell, ignore normal stamp daub
+            if (event.target.tagName === 'BUTTON' || event.target.tagName === 'INPUT' || event.target.closest('button')) return;
+            
+            cellElement.classList.toggle('bg-yellow-100');
+            cellElement.classList.toggle('ring-2');
+            cellElement.classList.toggle('ring-yellow-400');
+            cellElement.classList.toggle('pulse-marked');
+            
+            showNotification("Tile Toggled", `Card index #${cardId}, position cell ${cellIndex + 1} clicked`, "info");
+        }
+
+
+        // ========================================== UNDO / REDO STATE HISTORIAN ==========================================
+
+        function saveHistoryState() {
+            // Trim historical path if user has stepped backwards and initiated a new branch
+            if (state.historyIdx < state.history.length - 1) {
+                state.history = state.history.slice(0, state.historyIdx + 1);
+            }
+            
+            const snapshot = {
+                projectName: state.projectName,
+                gridSize: state.gridSize,
+                centerCellMode: state.centerCellMode,
+                generatorType: state.generatorType,
+                customVocab: [...state.customVocab],
+                batchImages: [...state.batchImages],
+                cardCount: state.cardCount,
+                headerStyle: state.headerStyle,
+                headerCustomText: state.headerCustomText,
+                themeColor: state.themeColor,
+                gridlineColor: state.gridlineColor,
+                gridlineThickness: state.gridlineThickness,
+                fontScale: state.fontScale,
+                fontFamily: state.fontFamily,
+                watermarkEnabled: state.watermarkEnabled,
+                watermarkText: state.watermarkText,
+                watermarkOpacity: state.watermarkOpacity,
+                watermarkRotation: state.watermarkRotation,
+                cutGuidesEnabled: state.cutGuidesEnabled,
+                brandingFooter: state.brandingFooter,
+                // Deep copy cards array to preserve direct inline cell editing modifications in the history stack!
+                activeCards: JSON.parse(JSON.stringify(state.activeCards))
+            };
+
+            state.history.push(JSON.stringify(snapshot));
+            state.historyIdx++;
+        }
+
+        // Perform undo action
+        function triggerUndo() {
+            if (state.historyIdx > 0) {
+                state.historyIdx--;
+                restoreSnapshot(JSON.parse(state.history[state.historyIdx]));
+                showNotification("Undo Triggered", "Restored previous design configuration.", "info");
+            } else {
+                showNotification("History End", "No more actions to undo.", "warning");
+            }
+        }
+
+        // Perform redo action
+        function triggerRedo() {
+            if (state.historyIdx < state.history.length - 1) {
+                state.historyIdx++;
+                restoreSnapshot(JSON.parse(state.history[state.historyIdx]));
+                showNotification("Redo Triggered", "Applied ahead-state design configuration.", "info");
+            } else {
+                showNotification("History Front", "No actions forward in line.", "warning");
+            }
+        }
+
+        function restoreSnapshot(snap) {
+            state.projectName = snap.projectName;
+            state.gridSize = snap.gridSize;
+            state.centerCellMode = snap.centerCellMode;
+            state.generatorType = snap.generatorType;
+            state.customVocab = snap.customVocab;
+            state.batchImages = snap.batchImages;
+            state.cardCount = snap.cardCount;
+            state.headerStyle = snap.headerStyle;
+            state.headerCustomText = snap.headerCustomText;
+            state.themeColor = snap.themeColor;
+            state.gridlineColor = snap.gridlineColor;
+            state.gridlineThickness = snap.gridlineThickness;
+            state.fontScale = snap.fontScale;
+            state.fontFamily = snap.fontFamily;
+            state.watermarkEnabled = snap.watermarkEnabled;
+            state.watermarkText = snap.watermarkText;
+            state.watermarkOpacity = snap.watermarkOpacity;
+            state.watermarkRotation = snap.watermarkRotation;
+            state.cutGuidesEnabled = snap.cutGuidesEnabled;
+            state.brandingFooter = snap.brandingFooter;
+            
+            if (snap.activeCards) {
+                state.activeCards = JSON.parse(JSON.stringify(snap.activeCards));
+            }
+
+            // Sync Form Elements visually
+            document.getElementById('project-name').value = state.projectName;
+            document.getElementById('grid-size').value = state.gridSize;
+            document.getElementById('center-cell-mode').value = state.centerCellMode;
+            document.getElementById('theme-color').value = state.themeColor;
+            document.getElementById('gridline-color').value = state.gridlineColor;
+            document.getElementById('gridline-thickness').value = state.gridlineThickness;
+            document.getElementById('font-scale').value = state.fontScale;
+            document.getElementById('card-font-family').value = state.fontFamily;
+            document.getElementById('watermark-enabled').checked = state.watermarkEnabled;
+            document.getElementById('watermark-text').value = state.watermarkText;
+            document.getElementById('watermark-opacity').value = state.watermarkOpacity;
+            document.getElementById('watermark-rotation').value = state.watermarkRotation;
+            document.getElementById('cut-guides-enabled').checked = state.cutGuidesEnabled;
+            document.getElementById('branding-footer').checked = state.brandingFooter;
+
+            applyCardStyling();
+        }
+
+
+        // ========================================== SAVE / LOAD SYSTEM (INDEXEDDB) ==========================================
+
+        function saveProjectToWorkspace() {
+            const workspaceObj = {
+                id: state.projectName + "_" + Date.now(),
+                projectName: state.projectName,
+                timestamp: new Date().toLocaleString(),
+                payload: state.history[state.historyIdx] || JSON.stringify(state)
+            };
+
+            // Use LocalStorage as simple lightweight failover backup storage
+            let saved = localStorage.getItem('BINGOPRO_PROJECTS');
+            let list = saved ? JSON.parse(saved) : [];
+            list.unshift(workspaceObj);
+            localStorage.setItem('BINGOPRO_PROJECTS', JSON.stringify(list));
+
+            showNotification("Project Saved", `"${state.projectName}" stored in offline workspace.`, "success");
+        }
+
+        function loadProjectsList() {
+            const modal = document.getElementById('project-loader-modal');
+            const listEl = document.getElementById('saved-projects-list');
+            modal.classList.remove('hidden');
+            listEl.innerHTML = '';
+
+            let saved = localStorage.getItem('BINGOPRO_PROJECTS');
+            let list = saved ? JSON.parse(saved) : [];
+
+            if (list.length === 0) {
+                listEl.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">No previous projects detected.</p>`;
+                return;
+            }
+
+            list.forEach((proj, idx) => {
+                const item = document.createElement('div');
+                item.className = "p-3 rounded-lg border border-slate-100 hover:bg-slate-50 flex items-center justify-between text-left";
+                item.innerHTML = `
+                    <div>
+                        <span class="block font-bold text-xs text-slate-800">${proj.projectName}</span>
+                        <span class="text-[9px] text-slate-400 font-mono">${proj.timestamp}</span>
+                    </div>
+                    <div class="flex space-x-1">
+                        <button onclick="restoreWorkspaceAtIndex(${idx})" class="px-2 py-1 bg-slate-900 text-white rounded text-[10px] font-bold hover:bg-slate-800">Load</button>
+                        <button onclick="deleteWorkspaceAtIndex(${idx})" class="p-1 text-red-500 hover:bg-red-50 rounded"><i data-lucide="trash" class="w-3.5 h-3.5"></i></button>
+                    </div>
+                `;
+                listEl.appendChild(item);
+            });
+            lucide.createIcons();
+        }
+
+        function restoreWorkspaceAtIndex(idx) {
+            let saved = localStorage.getItem('BINGOPRO_PROJECTS');
+            let list = saved ? JSON.parse(saved) : [];
+            if (list[idx]) {
+                restoreSnapshot(JSON.parse(proj = list[idx].payload));
+                closeProjectsModal();
+                showNotification("Workspace Loaded", `Successfully restored "${list[idx].projectName}"!`, "success");
+            }
+        }
+
+        function deleteWorkspaceAtIndex(idx) {
+            let saved = localStorage.getItem('BINGOPRO_PROJECTS');
+            let list = saved ? JSON.parse(saved) : [];
+            list.splice(idx, 1);
+            localStorage.setItem('BINGOPRO_PROJECTS', JSON.stringify(list));
+            loadProjectsList();
+            showNotification("Project Deleted", "Removed from workspace.", "info");
+        }
+
+        function closeProjectsModal() {
+            document.getElementById('project-loader-modal').classList.add('hidden');
+        }
+
+
+        // ========================================== PRINT & PDF ASSET GENERATION ==========================================
+
+        function exportBingoSheets(format) {
+            if (format === 'print') {
+                window.print();
+                return;
+            }
+
+            showNotification("Processing Export", `Generating high fidelity ${format.toUpperCase()} layout, please wait...`, "info");
+            
+            // Build temporary offscreen canvas for rendering multi-page images cleanly without UI wrappers
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 1200;
+            canvas.height = 1600;
+
+            // Paint elegant mock white print style
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Print Header
+            ctx.fillStyle = '#0f172a';
+            ctx.font = 'bold 36px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(state.projectName, canvas.width / 2, 100);
+
+            ctx.fillStyle = '#64748b';
+            ctx.font = '20px sans-serif';
+            ctx.fillText("BINGO MAKER PRO Enterprise Quality Sheet", canvas.width / 2, 140);
+
+            // Draw clean Grid Layout preview onto canvas context
+            ctx.strokeStyle = state.gridlineColor;
+            ctx.lineWidth = parseInt(state.gridlineThickness) * 2;
+            
+            const startY = 240;
+            const gridWidth = 900;
+            const cellSize = gridWidth / state.gridSize;
+            const startX = (canvas.width - gridWidth) / 2;
+
+            // Draw grid outline outer box
+            ctx.strokeRect(startX, startY, gridWidth, gridWidth);
+
+            // Fetch first active card to rasterize
+            const sampleCard = state.activeCards[0] || { cells: [] };
+
+            for (let r = 0; r < state.gridSize; r++) {
+                for (let c = 0; c < state.gridSize; c++) {
+                    const x = startX + c * cellSize;
+                    const y = startY + r * cellSize;
+                    ctx.strokeRect(x, y, cellSize, cellSize);
+
+                    // Add content
+                    const cellIdx = r * state.gridSize + c;
+                    const cell = sampleCard.cells[cellIdx];
+                    if (cell) {
+                        ctx.fillStyle = '#0f172a';
+                        ctx.font = `bold ${state.fontScale * 1.5}px sans-serif`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        
+                        let displayTxt = cell.value;
+                        if (cell.type === 'free') displayTxt = "FREE SPACE";
+                        
+                        ctx.fillText(displayTxt, x + cellSize/2, y + cellSize/2);
+                    }
+                }
+            }
+
+            // Footer branding
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '16px monospace';
+            ctx.fillText("Created by BINGO MAKER PRO by Cedventures in Taiwan", canvas.width / 2, 1500);
+
+            // Complete simulation trigger
+            setTimeout(() => {
+                const dataUrl = canvas.toDataURL(`image/${format === 'png' ? 'png' : 'jpeg'}`);
+                
+                const link = document.createElement('a');
+                link.download = `${state.projectName.replace(/\s+/g, '_')}_batch.${format}`;
+                link.href = dataUrl;
+                link.click();
+
+                showNotification("Export Ready", `Ready asset package downloaded successfully.`, "success");
+            }, 1000);
+        }
+
+
+        // ========================================== BROADCAST HOST PLATFORM ENGINE ==========================================
+
+        function generateHostRoomId() {
+            const rand = Math.floor(1000 + Math.random() * 9000);
+            state.hostRoomId = `ROOM-${rand}`;
+            document.getElementById('host-room-id-tag').innerText = `ROOM: ${state.hostRoomId}`;
+            
+            // Generate join link pointing directly to isolated player mode
+            const joinUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}?room=${state.hostRoomId}`;
+            document.getElementById('join-url-input').value = joinUrl;
+            refreshHostQRCode();
+        }
+
+        function refreshHostQRCode() {
+            const qrcodeContainer = document.getElementById("qrcode-canvas");
+            if (qrcodeContainer) {
+                qrcodeContainer.innerHTML = "";
+                const joinUrl = document.getElementById('join-url-input').value;
+                new QRCode(qrcodeContainer, {
+                    text: joinUrl,
+                    width: 110,
+                    height: 110,
+                    colorDark : "#0f172a",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.H
+                });
+            }
+        }
+
+        function copyJoinUrl() {
+            const input = document.getElementById('join-url-input');
+            input.select();
+            document.execCommand('copy');
+            showNotification("Link Copied", "Share the isolated player view link with participants!", "success");
+        }
+
+        // Host Pattern Matrix Customizer Clickable Board
+        function applyPresetPattern(type) {
+            // Setup blank grid
+            state.hostPattern = Array(5).fill().map(() => Array(5).fill(false));
+
+            if (type === 'horizontal') {
+                state.hostPattern[2] = Array(5).fill(true); // Row 3 central
+            } else if (type === 'vertical') {
+                for (let r = 0; r < 5; r++) state.hostPattern[r][2] = true;
+            } else if (type === 'diagonal') {
+                for (let i = 0; i < 5; i++) {
+                    state.hostPattern[i][i] = true;
+                    state.hostPattern[i][4 - i] = true;
+                }
+            } else if (type === 'corners') {
+                state.hostPattern[0][0] = true;
+                state.hostPattern[0][4] = true;
+                state.hostPattern[4][0] = true;
+                state.hostPattern[4][4] = true;
+            } else if (type === 'plus') {
+                for (let i = 0; i < 5; i++) {
+                    state.hostPattern[2][i] = true;
+                    state.hostPattern[i][2] = true;
+                }
+            } else if (type === 'blackout') {
+                state.hostPattern = Array(5).fill().map(() => Array(5).fill(true));
+            }
+
+            renderHostPatternPreview();
+            syncStateToJoinedPlayers();
+        }
+
+        // Generates an interactive random shape pattern for high event/classroom excitement
+        function hostGenerateRandomPattern() {
+            state.hostPattern = Array(5).fill().map(() => Array(5).fill(false));
+            
+            // Randomly select a balanced target count of 5 to 12 active cells
+            const targetCount = Math.floor(5 + Math.random() * 8);
+            let selectedCount = 0;
+            
+            while (selectedCount < targetCount) {
+                const randRow = Math.floor(Math.random() * 5);
+                const randCol = Math.floor(Math.random() * 5);
+                
+                if (!state.hostPattern[randRow][randCol]) {
+                    state.hostPattern[randRow][randCol] = true;
+                    selectedCount++;
+                }
+            }
+            
+            renderHostPatternPreview();
+            syncStateToJoinedPlayers();
+            showNotification("Random Shape Generated", `Active target pattern contains ${targetCount} coordinates.`, "success");
+        }
+
+        // Renders an advanced realistic interactive miniature Bingo Card for hosts to customize patterns
+        function renderHostPatternPreview() {
+            const container = document.getElementById('pattern-editor-preview');
+            if (container) {
+                container.innerHTML = '';
+                
+                // Mapped column offset ranges matching traditional B-I-N-G-O parameters
+                const mockCardRanges = [
+                    [1, 5, 8, 12, 15],   // B column
+                    [16, 20, 24, 27, 30], // I column
+                    [31, 35, 40, 42, 45], // N column
+                    [46, 50, 53, 58, 60], // G column
+                    [61, 65, 69, 72, 75]  // O column
+                ];
+
+                for (let r = 0; r < 5; r++) {
+                    for (let c = 0; c < 5; c++) {
+                        const isSelected = state.hostPattern[r][c];
+                        const isCenter = r === 2 && c === 2;
+                        
+                        const cell = document.createElement('div');
+                        // Highly premium LCD glassmorphic card cell appearance
+                        cell.className = `relative aspect-square w-full rounded-lg border transition-all duration-200 cursor-pointer flex flex-col items-center justify-center text-[10px] font-black ${
+                            isSelected 
+                            ? 'bg-gradient-to-br from-yellow-300 via-amber-400 to-orange-600 border-yellow-500 shadow-md shadow-yellow-500/40 text-slate-950 scale-[1.03] transform' 
+                            : 'bg-slate-900/80 hover:bg-slate-800 border-slate-700/80 text-slate-300 shadow-inner'
+                        }`;
+                        
+                        if (isCenter && state.centerCellMode === 'free') {
+                            cell.innerHTML = `
+                                <span class="text-[7.5px] font-extrabold uppercase tracking-tight ${isSelected ? 'text-slate-950' : 'text-amber-400 animate-pulse'}">FREE</span>
+                            `;
+                        } else {
+                            // Traditional Bingo lookup mapping column indices to realistic values
+                            const cellValue = mockCardRanges[c][r];
+                            cell.innerHTML = `<span class="${isSelected ? 'text-slate-950/80' : 'text-slate-400/80'} text-[8px] uppercase tracking-tighter leading-none">${LETTERS[c]}</span><span class="text-[10px] font-extrabold leading-none mt-0.5">${cellValue}</span>`;
+                        }
+                        
+                        // Active daub glowing animation overlays
+                        if (isSelected) {
+                            const daubOverlay = document.createElement('span');
+                            daubOverlay.className = "absolute inset-0.5 rounded-md border border-white/40 pointer-events-none animate-pulse";
+                            cell.appendChild(daubOverlay);
+                        }
+
+                        cell.onclick = () => {
+                            state.hostPattern[r][c] = !state.hostPattern[r][c];
+                            renderHostPatternPreview();
+                            syncStateToJoinedPlayers();
+                        };
+                        container.appendChild(cell);
+                    }
+                }
+            }
+        }
+
+        // Returns the list of active elements currently configured in the Designer Suite
+        function getActiveSuiteItems() {
+            if (state.batchImages.length > 0) {
+                // Return uploaded images array
+                return state.batchImages.map((img, idx) => ({ type: 'image', value: img, label: `Image #${idx + 1}` }));
+            } else if (state.generatorType === 'custom') {
+                // Return user custom vocabulary array
+                return state.customVocab.map(txt => ({ type: 'text', value: txt, label: txt }));
+            } else {
+                // Classic standard numbers 1 to 75
+                let classicNums = [];
+                for (let i = 1; i <= 75; i++) {
+                    const colIdx = Math.floor((i - 1) / 15);
+                    classicNums.push({ type: 'number', value: i, label: `${LETTERS[colIdx]}${i}` });
+                }
+                return classicNums;
+            }
+        }
+
+        // Renders the host draw matrix adapting automatically to whichever images or words are configured
+        function initializeHostDrawHistoryGrid() {
+            const grid = document.getElementById('host-draw-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            const items = getActiveSuiteItems();
+
+            // Set responsive columns depending on size of list
+            if (items.length > 25) {
+                grid.className = "grid grid-cols-5 sm:grid-cols-10 gap-2 max-h-[300px] overflow-y-auto pr-2 font-bold text-xs text-center select-none";
+            } else {
+                grid.className = "grid grid-cols-5 gap-2 max-h-[300px] overflow-y-auto pr-2 font-bold text-xs text-center select-none";
+            }
+
+            items.forEach((item, idx) => {
+                const block = document.createElement('div');
+                block.id = `host-deck-item-${idx}`;
+                block.className = "p-2 border rounded bg-slate-50 border-slate-200 text-[10px] text-slate-500 font-bold hover:bg-slate-100 transition duration-100 cursor-pointer flex flex-col items-center justify-center aspect-square overflow-hidden";
+                
+                if (item.type === 'image') {
+                    block.innerHTML = `<img src="${item.value}" class="max-w-[70%] max-h-[70%] object-contain" />`;
+                } else {
+                    block.innerText = item.label;
+                }
+
+                block.onclick = () => hostToggleItemManual(idx);
+                grid.appendChild(block);
+            });
+
+            updateHostBroadcastUI();
+        }
+
+        function hostToggleItemManual(itemIndex) {
+            if (state.drawnNumbers.includes(itemIndex)) {
+                state.drawnNumbers = state.drawnNumbers.filter(x => x !== itemIndex);
+            } else {
+                state.drawnNumbers.push(itemIndex);
+                state.lastDrawnNumber = itemIndex;
+            }
+            updateHostBroadcastUI();
+            syncStateToJoinedPlayers();
+        }
+
+        function hostToggleGameStatus() {
+            const btn = document.getElementById('host-start-btn');
+            if (state.hostGameState === 'stopped') {
+                state.hostGameState = 'playing';
+                btn.className = "px-3 py-2 bg-red-600 text-white rounded-lg text-xs font-bold flex items-center justify-center space-x-1 btn-hover-transform hover:bg-red-700";
+                btn.innerHTML = `<i data-lucide="pause" class="w-4 h-4"></i> <span>Pause Round</span>`;
+                document.getElementById('broadcast-subtext').innerText = "Tournament In Progress - Drawing Active";
+                showNotification("Bingo Started", "Ready for live real-time draw calls!", "success");
+            } else if (state.hostGameState === 'playing') {
+                state.hostGameState = 'stopped';
+                btn.className = "px-3 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold flex items-center justify-center space-x-1 btn-hover-transform hover:bg-emerald-700";
+                btn.innerHTML = `<i data-lucide="play" class="w-4 h-4"></i> <span>Resume Round</span>`;
+                document.getElementById('broadcast-subtext').innerText = "Tournament Paused";
+                showNotification("Bingo Paused", "System is temporarily suspended.", "warning");
+            }
+            lucide.createIcons();
+            syncStateToJoinedPlayers();
+        }
+
+        function hostRestartRound() {
+            state.drawnNumbers = [];
+            state.lastDrawnNumber = null;
+            state.hostGameState = 'stopped';
+            
+            const btn = document.getElementById('host-start-btn');
+            if (btn) {
+                btn.className = "px-3 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold flex items-center justify-center space-x-1 btn-hover-transform hover:bg-emerald-700";
+                btn.innerHTML = `<i data-lucide="play" class="w-4 h-4"></i> <span>Start Game</span>`;
+            }
+            const subtext = document.getElementById('broadcast-subtext');
+            if (subtext) subtext.innerText = "Waiting for host draw";
+            lucide.createIcons();
+
+            // Clear auto draws
+            if (state.autoDrawIntervalId) {
+                clearInterval(state.autoDrawIntervalId);
+                state.autoDrawIntervalId = null;
+                document.getElementById('auto-draw-toggle').checked = false;
+            }
+
+            updateHostBroadcastUI();
+            showNotification("Deck Reset", "Board wiped clean. All entries restored.", "info");
+            syncStateToJoinedPlayers();
+        }
+
+        function toggleLockJoins(locked) {
+            showNotification(locked ? "Room Locked" : "Room Open", locked ? "New registrations blocked." : "Players can enter now.", "info");
+        }
+
+        function toggleAutoDraw(active) {
+            if (active) {
+                const s = parseInt(document.getElementById('auto-draw-interval').value) || 5;
+                state.autoDrawIntervalId = setInterval(() => {
+                    if (state.hostGameState === 'playing') {
+                        hostTriggerDrawBall();
+                    }
+                }, s * 1000);
+                showNotification("Auto-Draw Active", `Drawing every ${s} seconds.`, "success");
+            } else {
+                if (state.autoDrawIntervalId) {
+                    clearInterval(state.autoDrawIntervalId);
+                    state.autoDrawIntervalId = null;
+                }
+                showNotification("Auto-Draw Disabled", "Manual clicking restored.", "info");
+            }
+        }
+
+        function hostTriggerDrawBall() {
+            const items = getActiveSuiteItems();
+            if (state.drawnNumbers.length >= items.length) {
+                showNotification("Game Complete", "All assets have been fully drawn!", "warning");
+                return;
+            }
+
+            // Generate unique un-drawn index
+            let targetIdx;
+            do {
+                targetIdx = Math.floor(Math.random() * items.length);
+            } while (state.drawnNumbers.includes(targetIdx));
+
+            state.drawnNumbers.push(targetIdx);
+            state.lastDrawnNumber = targetIdx;
+
+            updateHostBroadcastUI();
+            syncStateToJoinedPlayers();
+        }
+
+        function updateHostBroadcastUI() {
+            const lastIdx = state.lastDrawnNumber;
+            const bigValContainer = document.getElementById('big-draw-content');
+            const bigLet = document.getElementById('big-draw-letter');
+            const description = document.getElementById('drawn-ball-spoke-description');
+
+            const items = getActiveSuiteItems();
+
+            if (lastIdx !== null && items[lastIdx]) {
+                const activeItem = items[lastIdx];
+                bigLet.innerText = activeItem.type === 'image' ? "IMAGE DRAW" : "VOCAB DRAW";
+                
+                if (activeItem.type === 'image') {
+                    bigValContainer.innerHTML = `<img src="${activeItem.value}" class="max-w-[85%] max-h-[85%] object-contain" />`;
+                    description.innerText = `Call Item: ${activeItem.label}`;
+                } else {
+                    bigValContainer.innerHTML = `<span class="text-3xl text-center font-extrabold px-3 leading-none">${activeItem.value}</span>`;
+                    description.innerText = `Call Item: ${activeItem.value}`;
+                }
+
+                // Pulse Animation visual pop
+                const displayCard = document.getElementById('big-draw-card');
+                if (displayCard) {
+                    displayCard.classList.remove('scale-100');
+                    displayCard.classList.add('scale-110', 'border-emerald-500');
+                    setTimeout(() => {
+                        displayCard.classList.remove('scale-110', 'border-emerald-500');
+                        displayCard.classList.add('scale-100');
+                    }, 300);
+                }
+            } else {
+                bigLet.innerText = "STANDBY";
+                if (bigValContainer) bigValContainer.innerHTML = "--";
+                if (description) description.innerText = "READY TO START";
+            }
+
+            const ratioEl = document.getElementById('drawn-count-ratio');
+            if (ratioEl) {
+                ratioEl.innerText = `Drawn: ${state.drawnNumbers.length}/${items.length}`;
+            }
+
+            // Style history grid elements
+            items.forEach((item, idx) => {
+                const el = document.getElementById(`host-deck-item-${idx}`);
+                if (el) {
+                    if (state.drawnNumbers.includes(idx)) {
+                        el.className = "p-2 border rounded text-[10px] font-extrabold transition duration-150 flex flex-col items-center justify-center aspect-square overflow-hidden bg-yellow-500 border-yellow-600 text-slate-950 shadow-md transform scale-105";
+                    } else {
+                        el.className = "p-2 border rounded bg-slate-50 border-slate-200 text-[10px] text-slate-500 font-bold hover:bg-slate-100 transition duration-100 cursor-pointer flex flex-col items-center justify-center aspect-square overflow-hidden";
+                    }
+                }
+            });
+        }
+
+
+        // ========================================== PLAYER REALTIME SYNC PATTERNS ==========================================
+
+        function playerConnectToRoom() {
+            const name = document.getElementById('player-name-input').value.trim();
+            const room = document.getElementById('player-room-input').value.trim().toUpperCase();
+
+            if (!name) {
+                showNotification("Name Required", "Enter an identity nickname to enter.", "error");
+                return;
+            }
+            if (!room) {
+                showNotification("Room ID Required", "Input host room coordinates.", "error");
+                return;
+            }
+
+            state.playerName = name;
+            state.playerRoom = room;
+
+            // Generate an elegant, customizable user play card mapped *exclusively* from designer's uploaded items!
+            state.playerCard = {
+                id: 99,
+                uid: `P-${Math.floor(1000 + Math.random() * 9000)}`,
+                cells: []
+            };
+
+            const totalCellsNeeded = state.gridSize * state.gridSize;
+            const centerIdx = getCenterIndex();
+            const suiteItems = getActiveSuiteItems();
+
+            // Set FREE space cell if active
+            let cellData = Array(totalCellsNeeded).fill(null);
+            if (state.centerCellMode === 'free') {
+                cellData[centerIdx] = {
+                    type: 'free',
+                    value: 'FREE'
+                };
+            }
+
+            // Shuffle suite items to distribute randomly into player card cells
+            let shuffledSuite = [...suiteItems].sort(() => Math.random() - 0.5);
+            // Replicate elements if pool is smaller than grid requirement
+            while (shuffledSuite.length < totalCellsNeeded) {
+                shuffledSuite = shuffledSuite.concat([...suiteItems].sort(() => Math.random() - 0.5));
+            }
+
+            let poolIdx = 0;
+            for (let i = 0; i < totalCellsNeeded; i++) {
+                if (i === centerIdx && state.centerCellMode === 'free') continue;
+                
+                const item = shuffledSuite[poolIdx++];
+                cellData[i] = {
+                    type: item.type,
+                    value: item.value,
+                    scale: 85,
+                    fitMode: 'contain'
+                };
+            }
+
+            state.playerCard.cells = cellData;
+
+            // Switch presentation cards
+            document.getElementById('player-setup-card').classList.add('hidden');
+            document.getElementById('player-game-board').classList.remove('hidden');
+
+            document.getElementById('player-profile-name').innerText = name;
+            document.getElementById('player-avatar-letter').innerText = name.substring(0, 2).toUpperCase();
+            document.getElementById('player-connected-room').innerText = room;
+            document.getElementById('player-card-uid').innerText = state.playerCard.uid;
+
+            // Render Player Interactive Grid Board
+            renderPlayerLivePlayboard();
+
+            // Notify Simulated Multiplayer Host Matrix
+            registerPlayerToSimulatedHost(name, state.playerCard.uid);
+            showNotification("Successfully Connected", `Joined Game ${room} with Card ID: ${state.playerCard.uid}`, "success");
+            
+            // Sync current host drawings immediately
+            playerAcknowledgeHostDraw();
+        }
+
+        function registerPlayerToSimulatedHost(name, uid) {
+            // Check for duplicates
+            if (!state.connectedPlayers.some(p => p.uid === uid)) {
+                state.connectedPlayers.push({
+                    name: name,
+                    uid: uid,
+                    status: 'online'
+                });
+            }
+
+            // Re-render host interface monitoring panels
+            const hostList = document.getElementById('host-players-list');
+            if (hostList) {
+                hostList.innerHTML = '';
+                
+                state.connectedPlayers.forEach((player) => {
+                    const card = document.createElement('div');
+                    card.className = "p-3 rounded-xl border border-slate-100 bg-slate-50 flex items-center justify-between";
+                    card.innerHTML = `
+                        <div class="flex items-center space-x-2">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            <div>
+                                <span class="block text-xs font-bold text-slate-800">${player.name}</span>
+                                <span class="text-[9px] text-slate-400 font-mono">${player.uid}</span>
+                            </div>
+                        </div>
+                        <button onclick="kickPlayerDirectly('${player.uid}')" class="p-1 hover:bg-red-50 rounded text-red-500">
+                            <i data-lucide="user-x" class="w-3.5 h-3.5"></i>
+                        </button>
+                    `;
+                    hostList.appendChild(card);
+                });
+                lucide.createIcons();
+            }
+
+            const pill = document.getElementById('player-count-pill');
+            if (pill) {
+                pill.innerText = `${state.connectedPlayers.length} Joined`;
+            }
+        }
+
+        function kickPlayerDirectly(uid) {
+            state.connectedPlayers = state.connectedPlayers.filter(p => p.uid !== uid);
+            registerPlayerToSimulatedHost("", "");
+            showNotification("Player Removed", `Ejected card registration ${uid}`, "warning");
+        }
+
+        function kickAllPlayers() {
+            state.connectedPlayers = [];
+            const list = document.getElementById('host-players-list');
+            if (list) {
+                list.innerHTML = `
+                    <div class="col-span-full py-4 text-center text-slate-400 text-xs">
+                        No players connected. Share the room ID or QR Code to invite users.
+                    </div>
+                `;
+            }
+            const pill = document.getElementById('player-count-pill');
+            if (pill) pill.innerText = `0 Joined`;
+            showNotification("Lobby Cleared", "Ejected all players from current lobby.", "warning");
+        }
+
+        // Render live mobile playboard strictly using configured grid items and colors
+        function renderPlayerLivePlayboard() {
+            const wrapper = document.getElementById('player-interactive-card-element');
+            if (!wrapper) return;
+            wrapper.innerHTML = '';
+
+            const gridContainer = document.createElement('div');
+            gridContainer.className = "grid gap-1.5 bingo-grid w-full aspect-square";
+            gridContainer.style.gridTemplateColumns = `repeat(${state.gridSize}, minmax(0, 1fr))`;
+
+            // Heading logic
+            let headingMarkup = '';
+            if (state.headerStyle !== 'none') {
+                let letters = LETTERS;
+                if (state.headerStyle === 'custom') {
+                    const customLetters = state.headerCustomText.toUpperCase().split('');
+                    letters = customLetters.slice(0, state.gridSize);
+                    while (letters.length < state.gridSize) letters.push('X');
+                } else if (state.gridSize !== 5) {
+                    letters = LETTERS.slice(0, state.gridSize);
+                }
+
+                headingMarkup = `<div class="grid gap-1.5 mb-3 select-none" style="grid-template-columns: repeat(${state.gridSize}, minmax(0, 1fr)); font-family: ${state.fontFamily}; color: ${state.themeColor};">`;
+                for (let h = 0; h < state.gridSize; h++) {
+                    headingMarkup += `<div class="text-center font-extrabold text-sm border-b pb-2" style="border-color: ${state.gridlineColor};">${letters[h]}</div>`;
+                }
+                headingMarkup += `</div>`;
+                
+                const headerWrapper = document.createElement('div');
+                headerWrapper.innerHTML = headingMarkup;
+                wrapper.appendChild(headerWrapper);
+            }
+
+            const totalCells = state.gridSize * state.gridSize;
+            const centerIdx = getCenterIndex();
+
+            // Print Cells mapping coordinate rows/columns
+            for (let i = 0; i < totalCells; i++) {
+                const cell = state.playerCard.cells[i];
+                const cellDiv = document.createElement('div');
+                cellDiv.id = `player-grid-slot-${i}`;
+                cellDiv.className = "flex items-center justify-center border text-center font-black text-slate-800 bg-slate-50 border-slate-200 rounded-xl cursor-pointer select-none transition-all duration-150 hover:bg-slate-100 aspect-square overflow-hidden p-1";
+                cellDiv.style.borderColor = state.gridlineColor;
+                cellDiv.style.fontFamily = state.fontFamily;
+                
+                // Adjust text size based on scale slider and layout constraints
+                const layoutScaleFactor = state.gridSize === 3 ? 1.2 : (state.gridSize === 4 ? 1.0 : 0.85);
+                const activeFontScale = Math.max(9, Math.round(state.fontScale * layoutScaleFactor));
+                cellDiv.style.fontSize = `${activeFontScale}px`;
+
+                if (cell.type === 'free' || (i === centerIdx && state.centerCellMode === 'free')) {
+                    cellDiv.className = "flex items-center justify-center border text-center font-black text-amber-500 bg-yellow-50 border-amber-300 rounded-xl cursor-pointer select-none aspect-square animate-pulse overflow-hidden p-1";
+                    cellDiv.innerHTML = `<span class="font-extrabold uppercase leading-none break-words">${cell.value}</span>`;
+                } else if (cell.type === 'image') {
+                    cellDiv.innerHTML = `<img src="${cell.value}" class="max-w-[85%] max-h-[85%] object-contain rounded" />`;
+                } else {
+                    cellDiv.innerHTML = `<span class="leading-tight break-all px-0.5">${cell.value}</span>`;
+                }
+
+                cellDiv.onclick = () => playerToggleCellMarkup(i);
+                gridContainer.appendChild(cellDiv);
+            }
+
+            wrapper.appendChild(gridContainer);
+        }
+
+        // Simulates WebSocket server pushing dynamic draw logs to clients
+        function syncStateToJoinedPlayers() {
+            // Only update client if player setup card is completed and matching room
+            if (state.playerName && state.playerRoom === state.hostRoomId) {
+                playerAcknowledgeHostDraw();
+            }
+        }
+
+        function playerAcknowledgeHostDraw() {
+            const spotlight = document.getElementById('player-spotlight-display');
+            const subtext = document.getElementById('player-draw-notification-text');
+            const roundCount = document.getElementById('player-round-call-seq');
+
+            if (!roundCount) return;
+
+            roundCount.innerText = state.drawnNumbers.length;
+
+            const items = getActiveSuiteItems();
+
+            if (state.lastDrawnNumber !== null && items[state.lastDrawnNumber]) {
+                const calledItem = items[state.lastDrawnNumber];
+                
+                if (calledItem.type === 'image') {
+                    spotlight.innerHTML = `<img src="${calledItem.value}" class="max-w-full max-h-full object-contain rounded" />`;
+                    subtext.innerText = `Host called: Custom Image!`;
+                } else {
+                    spotlight.innerHTML = `<span class="text-xs font-extrabold px-1 truncate">${calledItem.value}</span>`;
+                    subtext.innerText = `Host called: "${calledItem.value}"`;
+                }
+
+                // Auto-daub auto dauber helper toggled check
+                const isAutoDaub = document.getElementById('toggle-auto-daub').checked;
+                if (isAutoDaub) {
+                    // Search matching values on player's assigned card
+                    state.playerCard.cells.forEach((cell, idx) => {
+                        if (cell.value === calledItem.value) {
+                            if (!state.playerMarkedCells.includes(idx)) {
+                                playerToggleCellMarkup(idx);
+                                showNotification("Auto Daubed!", "Matched called item on play card!", "success");
+                            }
+                        }
+                    });
+                }
+            } else {
+                spotlight.innerText = "--";
+                subtext.innerText = "Game initialized. Wait for drawing calls.";
+            }
+
+            // Sync visual winning requirement display as well
+            renderPlayerWinningPatternGuide();
+        }
+
+        // Upgrades the Player's target display to show a realistic miniature synchronized classic Bingo Card layout
+        function renderPlayerWinningPatternGuide() {
+            const wrapper = document.getElementById('player-pattern-display-wrapper');
+            if (wrapper) {
+                wrapper.innerHTML = '';
+                
+                // Embedded miniature container mimicking host card (Premium LCD / Scoreboard styling)
+                const miniGrid = document.createElement('div');
+                miniGrid.className = "grid grid-cols-5 gap-1 aspect-square w-full relative z-10 select-none";
+
+                const mockCardRanges = [
+                    [1, 5, 8, 12, 15],
+                    [16, 20, 24, 27, 30],
+                    [31, 35, 40, 42, 45],
+                    [46, 50, 53, 58, 60],
+                    [61, 65, 69, 72, 75]
+                ];
+
+                // Mini OLED Header Bar inside the player guide
+                const miniHeader = document.createElement('div');
+                miniHeader.className = "grid grid-cols-5 gap-1 mb-1.5 text-center text-[8px] font-black tracking-wider text-slate-500 select-none";
+                miniHeader.innerHTML = `
+                    <span>B</span>
+                    <span>I</span>
+                    <span>N</span>
+                    <span>G</span>
+                    <span>O</span>
+                `;
+                wrapper.appendChild(miniHeader);
+
+                for (let r = 0; r < 5; r++) {
+                    for (let c = 0; c < 5; c++) {
+                        const isRequired = state.hostPattern[r][c];
+                        const isCenter = r === 2 && c === 2;
+                        
+                        const block = document.createElement('div');
+                        block.className = `relative aspect-square w-full rounded-md flex flex-col items-center justify-center text-[7px] font-black transition-all ${
+                            isRequired 
+                            ? 'bg-gradient-to-br from-yellow-300 via-amber-400 to-orange-500 border border-yellow-600 text-slate-950 shadow-sm shadow-yellow-500/20' 
+                            : 'bg-slate-950 border border-slate-800/80 text-slate-600'
+                        }`;
+                        
+                        if (isCenter && state.centerCellMode === 'free') {
+                            block.innerHTML = `<span class="text-[5.5px] scale-[0.85] font-black leading-none ${isRequired ? 'text-slate-950' : 'text-amber-400 animate-pulse'}">FREE</span>`;
+                        } else {
+                            const val = mockCardRanges[c][r];
+                            block.innerHTML = `<span class="text-[5.5px] scale-[0.85] leading-none opacity-40">${LETTERS[c]}</span><span class="text-[7.5px] font-extrabold leading-none mt-[1px]">${val}</span>`;
+                        }
+                        
+                        miniGrid.appendChild(block);
+                    }
+                }
+                
+                wrapper.appendChild(miniGrid);
+            }
+        }
+
+        // High-Fidelity Validation Algorithm evaluating matches
+        function playerTriggerClaimBingo() {
+            // Map matrix criteria comparing cell marks
+            let claimsMatched = true;
+
+            // Free Space default coordinates
+            const centerIdx = getCenterIndex();
+
+            for (let r = 0; r < 5; r++) {
+                for (let c = 0; c < 5; c++) {
+                    const isRequired = state.hostPattern[r][c];
+                    if (isRequired) {
+                        const cellIndex = r * 5 + c;
+                        
+                        // Check if center spot and free mode bypasses verification
+                        if (cellIndex === centerIdx && state.centerCellMode === 'free') {
+                            continue;
+                        }
+
+                        // Must match drawn logic values and user marking inputs
+                        const hasMarked = state.playerMarkedCells.includes(cellIndex);
+                        const cellValue = state.playerCard.cells[cellIndex] ? state.playerCard.cells[cellIndex].value : null;
+                        
+                        // Check if the cell value is present in host's drawn numbers log
+                        const items = getActiveSuiteItems();
+                        const wasDrawn = state.drawnNumbers.some(idx => items[idx] && items[idx].value === cellValue);
+
+                        if (!hasMarked || !wasDrawn) {
+                            claimsMatched = false;
+                        }
+                    }
+                }
+            }
+
+            if (claimsMatched) {
+                // Instantly notify simulation host via visual celebration overlay!
+                showNotification("BINGO! APPROVED", "Your card elements conform perfectly! Claim validated.", "success");
+                triggerVisualCelebrationPop();
+            } else {
+                showNotification("Invalid Claims", "Target patterns did not match the actual drawn items.", "error");
+            }
+        }
+
+        // Animated celebration handler
+        function triggerVisualCelebrationPop() {
+            // Spawn confetti styled emojis across page container
+            for (let i = 0; i < 20; i++) {
+                const conf = document.createElement('div');
+                conf.className = "fixed text-2xl z-50 transition duration-1000 transform pointer-events-none select-none";
+                conf.innerText = ["👑", "🎉", "🔥", "✨", "💥", "🤩"][Math.floor(Math.random() * 6)];
+                conf.style.left = `${Math.random() * 100}vw`;
+                conf.style.top = `100vh`;
+                
+                document.body.appendChild(conf);
+
+                // Run floating pop
+                setTimeout(() => {
+                    conf.style.top = `${Math.random() * 20}vh`;
+                    conf.style.transform = `scale(${Math.random() * 2}) rotate(${Math.random() * 360}deg)`;
+                    conf.style.opacity = '0';
+                    setTimeout(() => {
+                        conf.remove();
+                    }, 1000);
+                }, 50);
+            }
+        }
+    </script>
+</body>
+</html>
